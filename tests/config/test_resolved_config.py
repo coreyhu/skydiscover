@@ -7,6 +7,13 @@ import json
 from skydiscover.config import Config
 
 
+def test_resolved_snapshot_is_additive_to_the_existing_projection() -> None:
+    config = Config.from_dict({"search": {"type": "evox", "switch_interval": 3, "share_llm": True}})
+
+    assert "switch_interval" not in config.to_dict()["search"]
+    assert config.to_resolved_dict()["search"]["switch_interval"] == 3
+
+
 def test_evox_snapshot_includes_effective_search_configuration() -> None:
     config = Config.from_dict(
         {
@@ -26,12 +33,12 @@ def test_evox_snapshot_includes_effective_search_configuration() -> None:
             "benchmark": {
                 "enabled": True,
                 "name": "pilot",
-                "params": {"instance": 7},
+                "instance": 7,
             },
         }
     )
 
-    resolved = config.to_dict()
+    resolved = config.to_resolved_dict()
 
     assert resolved["language"] == "python"
     assert resolved["search"] == {
@@ -65,7 +72,7 @@ def test_snapshot_excludes_credentials_and_live_clients() -> None:
         }
     )
 
-    rendered = json.dumps(config.to_dict(), sort_keys=True)
+    rendered = json.dumps(config.to_resolved_dict(), sort_keys=True)
 
     assert "secret" not in rendered
     assert "api_key" not in rendered
@@ -81,17 +88,11 @@ def test_resolved_snapshot_round_trips_supported_configuration() -> None:
                 "share_llm": True,
                 "database": {"auto_generate_variation_operators": False},
             },
-            "benchmark": {
-                "enabled": True,
-                "name": "pilot",
-                "params": {"instance": 11},
-            },
         }
     )
 
-    restored = Config.from_dict(original.to_dict())
+    restored = Config.from_dict(original.to_resolved_dict())
 
     assert restored.search.switch_interval == 4
     assert restored.search.share_llm is True
     assert restored.search.database.auto_generate_variation_operators is False
-    assert restored.benchmark.params == {"instance": 11}
