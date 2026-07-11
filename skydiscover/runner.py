@@ -200,7 +200,10 @@ class Runner:
             if best:
                 try:
                     test_result = await self.discovery_controller.evaluator.evaluate_program(
-                        best.solution, best.id, mode="test"
+                        best.solution,
+                        best.id,
+                        mode="test",
+                        budget_scope="final_test",
                     )
                     for k, v in test_result.metrics.items():
                         best.metrics[f"test_{k}"] = v
@@ -273,7 +276,7 @@ class Runner:
             else self.initial_program_solution
         )
         eval_result = await self.discovery_controller.evaluator.evaluate_program(
-            eval_input, program_id
+            eval_input, program_id, budget_scope="initial"
         )
         metrics = eval_result.metrics
 

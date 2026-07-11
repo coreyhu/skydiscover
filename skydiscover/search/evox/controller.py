@@ -152,7 +152,11 @@ class CoEvolutionController(DiscoveryController):
                 iteration += attempts_used
 
                 # Co-evolve search strategy if needed (skip on final iteration)
-                if iteration < self.total_solution_iterations and self._should_evolve_search():
+                if (
+                    iteration < self.total_solution_iterations
+                    and not self.shutdown_event.is_set()
+                    and self._should_evolve_search()
+                ):
                     logger.info(
                         f"Stagnation detected -> evolving search strategy (solution_iter={completed_solution_iter})"
                     )

@@ -89,6 +89,10 @@ def test_snapshot_excludes_credentials_and_live_clients() -> None:
 def test_resolved_snapshot_round_trips_supported_configuration() -> None:
     original = Config.from_dict(
         {
+            "evaluator": {
+                "max_candidate_evaluations": 12,
+                "evaluation_budget_report_path": "outputs/evaluation-budget.json",
+            },
             "search": {
                 "type": "evox",
                 "switch_interval": 4,
@@ -99,7 +103,14 @@ def test_resolved_snapshot_round_trips_supported_configuration() -> None:
     )
 
     restored = Config.from_dict(original.to_resolved_dict())
+    legacy_restored = Config.from_dict(original.to_dict())
 
     assert restored.search.switch_interval == 4
     assert restored.search.share_llm is True
     assert restored.search.database.auto_generate_variation_operators is False
+    assert restored.evaluator.max_candidate_evaluations == 12
+    assert (
+        restored.evaluator.evaluation_budget_report_path
+        == "outputs/evaluation-budget.json"
+    )
+    assert legacy_restored.evaluator.max_candidate_evaluations == 12

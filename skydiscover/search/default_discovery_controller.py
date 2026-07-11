@@ -79,6 +79,14 @@ class DiscoveryController:
         self.config.evaluator.evaluation_file = self.evaluation_file
         self.config.evaluator.file_suffix = self.file_suffix
         self.config.evaluator.is_image_mode = self.config.language == "image"
+        if (
+            self.config.evaluator.max_candidate_evaluations is not None
+            and not self.config.evaluator.evaluation_budget_report_path
+            and self.output_dir
+        ):
+            self.config.evaluator.evaluation_budget_report_path = os.path.join(
+                self.output_dir, "evaluation-budget.json"
+            )
 
         llm_judge = None
         if self.config.evaluator.llm_as_judge:
@@ -92,6 +100,7 @@ class DiscoveryController:
             max_concurrent=max(self.config.max_parallel_iterations, 4),
             env_vars=controller_input.evaluator_env_vars,
         )
+        self.evaluator.budget.set_exhaustion_callback(self.shutdown_event.set)
 
         self.agentic_generator = None
         if self.config.agentic.enabled:

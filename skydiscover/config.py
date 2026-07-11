@@ -351,6 +351,12 @@ class EvaluatorConfig:
     timeout: int = 360
     max_retries: int = 3
 
+    # Optional hard cap on actual candidate evaluator executions. Retries and
+    # cascade stages each count; initial and final-test evaluations are tracked
+    # separately and do not consume this budget.
+    max_candidate_evaluations: Optional[int] = None
+    evaluation_budget_report_path: Optional[str] = None
+
     # Evaluation strategies
     cascade_evaluation: bool = True
     cascade_thresholds: List[float] = field(default_factory=lambda: [0.3, 0.6])
@@ -819,6 +825,8 @@ class Config:
                 "is_image_mode": self.evaluator.is_image_mode,
                 "timeout": self.evaluator.timeout,
                 "max_retries": self.evaluator.max_retries,
+                "max_candidate_evaluations": self.evaluator.max_candidate_evaluations,
+                "evaluation_budget_report_path": self.evaluator.evaluation_budget_report_path,
                 "cascade_evaluation": self.evaluator.cascade_evaluation,
                 "cascade_thresholds": self.evaluator.cascade_thresholds,
                 "inject_evaluator_context": self.evaluator.inject_evaluator_context,

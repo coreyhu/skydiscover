@@ -10,6 +10,7 @@ import uuid
 from typing import Dict, List, Optional, Tuple
 
 from skydiscover.config import EvaluatorConfig
+from skydiscover.evaluation.budget import EvaluationBudget, EvaluationBudgetExceeded
 from skydiscover.evaluation.evaluation_result import EvaluationResult
 from skydiscover.utils.async_utils import TaskPool
 from skydiscover.utils.metrics import format_metrics
@@ -81,6 +82,10 @@ class ContainerizedEvaluator:
         self.task_pool = TaskPool(max_concurrency=max_concurrent)
         self.llm_judge = None
         self.env_vars = dict(env_vars or {})
+        self.budget = EvaluationBudget(
+            max_candidate_evaluations=config.max_candidate_evaluations,
+            report_path=config.evaluation_budget_report_path,
+        )
         if self.env_vars:
             logger.info(
                 f"Passing {len(self.env_vars)} environment variables to container: {list(self.env_vars.keys())}"
@@ -134,6 +139,7 @@ class ContainerizedEvaluator:
         program_solution: str,
         program_id: str = "",
         mode: str = "train",
+        budget_scope: str = "candidate",
     ) -> EvaluationResult:
         """Evaluate one candidate program and return scores.
 
@@ -142,6 +148,8 @@ class ContainerizedEvaluator:
             program_id: Optional identifier for logging.
             mode: ``"train"`` for hot-loop evaluation, ``"test"`` for
                   authoritative/publish evaluation.
+            budget_scope: Accounting scope for this evaluation. Candidate
+                          evaluations are subject to the configured hard cap.
         """
         start_time = time.time()
         label = f" {program_id}" if program_id else ""
@@ -149,6 +157,7 @@ class ContainerizedEvaluator:
         last_exception = None
         for attempt in range(self.config.max_retries + 1):
             try:
+                self.budget.reserve(budget_scope)
                 result = await asyncio.wait_for(
                     asyncio.get_running_loop().run_in_executor(
                         None, self._run_container, program_solution, mode
@@ -165,6 +174,9 @@ class ContainerizedEvaluator:
             except asyncio.TimeoutError:
                 logger.error(f"Container timed out after {self.config.timeout}s{label}")
                 return EvaluationResult(metrics={"error": 0.0, "timeout": True})
+
+            except EvaluationBudgetExceeded:
+                raise
 
             except Exception as e:
                 last_exception = e

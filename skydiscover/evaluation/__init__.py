@@ -21,6 +21,7 @@ import os
 from typing import Dict, Optional, Union
 
 from skydiscover.evaluation.container_evaluator import ContainerizedEvaluator
+from skydiscover.evaluation.budget import EvaluationBudget, EvaluationBudgetExceeded
 from skydiscover.evaluation.evaluation_result import EvaluationResult
 from skydiscover.evaluation.evaluator import Evaluator
 from skydiscover.evaluation.harbor_evaluator import HarborEvaluator
@@ -28,6 +29,8 @@ from skydiscover.evaluation.llm_judge import LLMJudge
 
 __all__ = [
     "EvaluationResult",
+    "EvaluationBudget",
+    "EvaluationBudgetExceeded",
     "Evaluator",
     "ContainerizedEvaluator",
     "HarborEvaluator",
