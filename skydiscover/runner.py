@@ -18,6 +18,7 @@ from skydiscover.search.route import get_discovery_controller
 from skydiscover.search.utils.logging_utils import setup_search_logging
 from skydiscover.utils.code_utils import extract_solution_language
 from skydiscover.utils.metrics import format_metrics, get_score
+from skydiscover.utils.seeding import apply_seed_contract, write_seed_report
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,17 @@ class Runner:
         )
         os.makedirs(self.output_dir, exist_ok=True)
         self._setup_logging()
+        self.seed_report = apply_seed_contract(
+            self.config.random_seed,
+            self.config.search.database,
+        )
+        seed_report_path = write_seed_report(self.output_dir, self.seed_report)
+        logger.info(
+            "Seed contract: requested=%s, determinism=%s, report=%s",
+            self.config.random_seed,
+            self.seed_report["determinism_class"],
+            seed_report_path,
+        )
 
         # Load the initial program (can be optional)
         self.initial_program_path = initial_program_path

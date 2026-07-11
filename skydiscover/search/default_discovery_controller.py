@@ -30,6 +30,7 @@ from skydiscover.utils.code_utils import (
     format_diff_summary,
     parse_full_rewrite,
 )
+from skydiscover.utils.seeding import derive_seed
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +70,9 @@ class DiscoveryController:
         self.shutdown_event = mp.Event()
         self.early_stopping_triggered = False
 
-        self.llms = LLMPool(self.config.llm.models)
-        self.evaluator_llms = LLMPool(self.config.llm.evaluator_models)
-        self.guide_llms = LLMPool(self.config.llm.guide_models)
+        self.llms = self._make_llm_pool(self.config.llm.models, "solution")
+        self.evaluator_llms = self._make_llm_pool(self.config.llm.evaluator_models, "evaluator")
+        self.guide_llms = self._make_llm_pool(self.config.llm.guide_models, "guide")
 
         self._init_context_builder()
 
@@ -112,6 +113,12 @@ class DiscoveryController:
         logger.info(
             f"DiscoveryController initialized: num_context_programs={self.num_context_programs}"
         )
+
+    def _make_llm_pool(self, models, role: str) -> LLMPool:
+        """Preserve the legacy constructor unless a seed was requested."""
+
+        random_seed = derive_seed(self.config.random_seed, role)
+        return LLMPool(models) if random_seed is None else LLMPool(models, random_seed=random_seed)
 
     def close(self):
         """Release resources held by the evaluator (e.g. Docker containers)."""

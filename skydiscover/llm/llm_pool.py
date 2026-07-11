@@ -15,7 +15,7 @@ logger = logging.getLogger("skydiscover.llm")
 class LLMPool:
     """Weighted pool of LLM backends. Samples one per generate() call."""
 
-    def __init__(self, models_cfg: List[LLMModelConfig]):
+    def __init__(self, models_cfg: List[LLMModelConfig], random_seed: int | None = None):
         if not models_cfg:
             raise ValueError("LLMPool requires at least one model config")
 
@@ -34,7 +34,8 @@ class LLMPool:
             model_cfg.init_client(model_cfg) if model_cfg.init_client else OpenAILLM(model_cfg)
             for model_cfg in models_cfg
         ]
-        self.random_state = random.Random()
+        self.random_seed = random_seed
+        self.random_state = random.Random(random_seed)
 
         # Logging
         if len(models_cfg) > 1:

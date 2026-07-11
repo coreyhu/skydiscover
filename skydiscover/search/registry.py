@@ -14,6 +14,7 @@ from skydiscover.search.default_discovery_controller import (
 )
 from skydiscover.search.utils.discovery_utils import load_database_from_file
 from skydiscover.utils.code_utils import extract_solution_language
+from skydiscover.utils.seeding import derive_seed
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +121,7 @@ def setup_search(
     output_dir: Optional[str] = None,
     evaluator_env_vars: Optional[Dict[str, str]] = None,
     parent_llm_config: Optional["LLMConfig"] = None,
+    parent_random_seed: Optional[int] = None,
 ) -> Tuple[DiscoveryControllerInput, str]:
     """
     Load config, create database, and build a DiscoveryControllerInput from a config path.
@@ -137,6 +139,8 @@ def setup_search(
         Tuple of (controller_input, initial_program_solution)
     """
     config = load_config(config_path)
+    if parent_random_seed is not None:
+        config.random_seed = derive_seed(parent_random_seed, "evox_strategy")
 
     # Inherit LLM settings from parent config when provided.
     # Use the parent's actual model configs (which have the correct per-model

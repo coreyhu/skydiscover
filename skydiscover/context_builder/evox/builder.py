@@ -15,6 +15,7 @@ from skydiscover.context_builder.evox import formatters as fmt
 from skydiscover.context_builder.utils import TemplateManager, prog_attr
 from skydiscover.llm.llm_pool import LLMPool
 from skydiscover.search.base_database import Program
+from skydiscover.utils.seeding import derive_seed
 
 
 def run_async_safely(coro):
@@ -48,7 +49,12 @@ class EvoxContextBuilder(DefaultContextBuilder):
         self.template_manager = TemplateManager(_DEFAULT_TEMPLATES_DIR, _EVOX_TEMPLATES_DIR)
 
         summary_llm_config = config.llm.guide_models
-        self.summary_llm: LLMPool = LLMPool(summary_llm_config)
+        summary_seed = derive_seed(config.random_seed, "evox_summary")
+        self.summary_llm: LLMPool = (
+            LLMPool(summary_llm_config)
+            if summary_seed is None
+            else LLMPool(summary_llm_config, random_seed=summary_seed)
+        )
         if summary_llm_config:
             logger.info(
                 f"Initialized guide LLM inside EvoxContextBuilder: {summary_llm_config[0].name}"

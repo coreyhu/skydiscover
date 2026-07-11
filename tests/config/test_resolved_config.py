@@ -14,6 +14,13 @@ def test_resolved_snapshot_is_additive_to_the_existing_projection() -> None:
     assert config.to_resolved_dict()["search"]["switch_interval"] == 3
 
 
+def test_resolved_snapshot_records_the_requested_seed() -> None:
+    config = Config.from_dict({"random_seed": 17})
+
+    assert config.random_seed == 17
+    assert config.to_resolved_dict()["random_seed"] == 17
+
+
 def test_evox_snapshot_includes_effective_search_configuration() -> None:
     config = Config.from_dict(
         {

@@ -63,6 +63,7 @@ class CoEvolutionController(DiscoveryController):
             output_dir=self.config.search.output_dir,
             evaluator_env_vars=self.evaluator_env_vars,
             parent_llm_config=self.config.llm if self.config.search.share_llm else None,
+            parent_random_seed=self.config.random_seed,
         )
         self.search_controller = DiscoveryController(controller_input)
         self.search_scorer = LogWindowScorer()

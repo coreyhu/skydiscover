@@ -622,6 +622,9 @@ class Config:
 
     # General settings
     max_iterations: int = 100
+    # Opt-in base seed for local RNG owners. ``None`` preserves historical
+    # stochastic behavior when no seed is configured.
+    random_seed: Optional[int] = None
     checkpoint_interval: int = 10
     log_level: str = "INFO"
     log_dir: Optional[str] = None

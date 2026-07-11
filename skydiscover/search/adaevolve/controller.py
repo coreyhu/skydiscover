@@ -69,7 +69,6 @@ class AdaEvolveController(DiscoveryController):
         self.num_context_programs = self.config.search.num_context_programs
 
         # Components
-        self.llms = LLMPool(self.config.llm.models)
         self.context_builder = AdaEvolveContextBuilder(self.config)
 
         # Paradigm generator (if paradigm breakthrough is enabled)
