@@ -151,7 +151,9 @@ class GEPANativeContextBuilder(DefaultContextBuilder):
 
             parent_score_str = ""
             if prog.parent_id and prog.parent_id in parent_scores:
-                parent_score_str = f", parent_score: {parent_scores[prog.parent_id]:.4f}"
+                parent_score_str = (
+                    f", parent_score: {parent_scores[prog.parent_id]:.4f}"
+                )
 
             error_msg = ""
             if prog.metrics:
@@ -163,7 +165,9 @@ class GEPANativeContextBuilder(DefaultContextBuilder):
             if prog.metadata:
                 changes = prog.metadata.get("changes", "")
 
-            entry_lines = [f"#### Attempt {i} (score: {prog_score:.4f}{parent_score_str})"]
+            entry_lines = [
+                f"#### Attempt {i} (score: {prog_score:.4f}{parent_score_str})"
+            ]
             if changes:
                 entry_lines.append(f"Changes: {changes}")
             if error_msg:

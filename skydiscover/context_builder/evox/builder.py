@@ -45,7 +45,9 @@ class EvoxContextBuilder(DefaultContextBuilder):
     ):
         super().__init__(config)
         self.use_llm_stats_insight = use_llm_stats_insight
-        self.template_manager = TemplateManager(_DEFAULT_TEMPLATES_DIR, _EVOX_TEMPLATES_DIR)
+        self.template_manager = TemplateManager(
+            _DEFAULT_TEMPLATES_DIR, _EVOX_TEMPLATES_DIR
+        )
 
         summary_llm_config = config.llm.guide_models
         self.summary_llm: LLMPool = LLMPool(summary_llm_config)
@@ -77,7 +79,11 @@ class EvoxContextBuilder(DefaultContextBuilder):
         current_lines: List[str] = []
         for line in text.splitlines():
             stripped = line.strip()
-            if stripped.startswith("===") and stripped.endswith("===") and len(stripped) > 6:
+            if (
+                stripped.startswith("===")
+                and stripped.endswith("===")
+                and len(stripped) > 6
+            ):
                 if current_section is not None:
                     sections[current_section] = "\n".join(current_lines).strip()
                 current_section = stripped[3:-3]
@@ -94,7 +100,9 @@ class EvoxContextBuilder(DefaultContextBuilder):
             return ""
         user_content = f"Population Statistics:\n\n{stats_text}"
         result = await self.summary_llm.generate(
-            system_message=self.template_manager.get_template("stats_insight_system_message"),
+            system_message=self.template_manager.get_template(
+                "stats_insight_system_message"
+            ),
             messages=[{"role": "user", "content": user_content}],
         )
         return result.text
@@ -110,7 +118,9 @@ class EvoxContextBuilder(DefaultContextBuilder):
         if cache_key in self._problem_context_summary_cache:
             return self._problem_context_summary_cache[cache_key]
 
-        problem_context_input = self.template_manager.get_template("problem_template").format(
+        problem_context_input = self.template_manager.get_template(
+            "problem_template"
+        ).format(
             problem_description=problem_description,
             evaluator_context=evaluator_context,
         )
@@ -156,7 +166,9 @@ class EvoxContextBuilder(DefaultContextBuilder):
         previous_programs = context.get("previous_programs", [])
         language = self.config.language or "python"
 
-        user_template_key = self.user_template_override or "search_evolution_user_message"
+        user_template_key = (
+            self.user_template_override or "search_evolution_user_message"
+        )
         user_template = self.template_manager.get_template(user_template_key)
         system_message = self._get_system_message()
 
@@ -191,9 +203,13 @@ class EvoxContextBuilder(DefaultContextBuilder):
         problem_description = fmt.format_problem_description(
             search_stats.get("problem_description")
         )
-        evaluator_context = fmt.format_evaluator_context(search_stats.get("evaluator_context"))
+        evaluator_context = fmt.format_evaluator_context(
+            search_stats.get("evaluator_context")
+        )
 
-        problem_context_data = self.template_manager.get_template("problem_template").format(
+        problem_context_data = self.template_manager.get_template(
+            "problem_template"
+        ).format(
             problem_description=problem_description,
             evaluator_context=evaluator_context,
         )
@@ -223,7 +239,10 @@ class EvoxContextBuilder(DefaultContextBuilder):
 
             if stats_insight_data:
                 tasks.append(
-                    ("stats_insight", self._generate_stats_insight_async(stats_insight_data))
+                    (
+                        "stats_insight",
+                        self._generate_stats_insight_async(stats_insight_data),
+                    )
                 )
 
             has_meaningful_data = (
@@ -232,7 +251,8 @@ class EvoxContextBuilder(DefaultContextBuilder):
                 and evaluator_context
                 and evaluator_context.strip()
                 and not (
-                    problem_description.startswith("(No ") and evaluator_context.startswith("(No ")
+                    problem_description.startswith("(No ")
+                    and evaluator_context.startswith("(No ")
                 )
             )
             if has_meaningful_data:
@@ -247,13 +267,18 @@ class EvoxContextBuilder(DefaultContextBuilder):
 
             if batch_summary_data:
                 tasks.append(
-                    ("batch_summaries", self._generate_batch_summaries_async(batch_summary_data))
+                    (
+                        "batch_summaries",
+                        self._generate_batch_summaries_async(batch_summary_data),
+                    )
                 )
 
             if not tasks:
                 return {}
 
-            results = await asyncio.gather(*[task for _, task in tasks], return_exceptions=True)
+            results = await asyncio.gather(
+                *[task for _, task in tasks], return_exceptions=True
+            )
 
             result_dict = {}
             for (name, _), result in zip(tasks, results):
@@ -280,7 +305,9 @@ class EvoxContextBuilder(DefaultContextBuilder):
             llm_results.get("batch_summaries", ""), all_programs_data
         )
 
-        simplification_threshold = self.context_config.suggest_simplification_after_chars
+        simplification_threshold = (
+            self.context_config.suggest_simplification_after_chars
+        )
         improvement_areas = fmt.identify_search_improvement_areas(
             actual_program, program_metrics, previous_programs, simplification_threshold
         )

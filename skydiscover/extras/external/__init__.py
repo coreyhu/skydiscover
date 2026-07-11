@@ -58,7 +58,9 @@ def _register_backends():
         except ImportError:
             pass  # Package not installed — expected
         except Exception as e:
-            _logger.warning("Backend '%s' package is installed but failed to register: %s", name, e)
+            _logger.warning(
+                "Backend '%s' package is installed but failed to register: %s", name, e
+            )
 
 
 _register_backends()

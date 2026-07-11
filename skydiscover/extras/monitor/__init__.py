@@ -11,7 +11,10 @@ import os
 import time
 from typing import Optional, Tuple
 
-from skydiscover.extras.monitor.callback import create_external_callback, create_monitor_callback
+from skydiscover.extras.monitor.callback import (
+    create_external_callback,
+    create_monitor_callback,
+)
 from skydiscover.extras.monitor.server import MonitorServer
 
 __all__ = [
@@ -57,9 +60,9 @@ def start_monitor(
         try:
             from skydiscover.context_builder.human_feedback import HumanFeedbackReader
 
-            feedback_path = getattr(config, "human_feedback_file", None) or os.path.join(
-                output_dir, "human_feedback.md"
-            )
+            feedback_path = getattr(
+                config, "human_feedback_file", None
+            ) or os.path.join(output_dir, "human_feedback.md")
             feedback_mode = getattr(config, "human_feedback_mode", "append")
             feedback_reader = HumanFeedbackReader(feedback_path, mode=feedback_mode)
             monitor_server.set_feedback_reader(feedback_reader)

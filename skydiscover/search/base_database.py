@@ -38,8 +38,12 @@ class Program:
     other_context_ids: Optional[List[str]] = (
         None  # other program IDs to provide as context to generate this program
     )
-    parent_info: Optional[Tuple[str, str]] = None  # information about the parent program
-    context_info: Optional[List[Tuple[str, str]]] = None  # information about the context programs
+    parent_info: Optional[Tuple[str, str]] = (
+        None  # information about the parent program
+    )
+    context_info: Optional[List[Tuple[str, str]]] = (
+        None  # information about the context programs
+    )
 
     timestamp: float = field(default_factory=time.time)
 
@@ -67,7 +71,9 @@ class Program:
         # Log if we're filtering out any fields
         if len(filtered_data) != len(data):
             filtered_out = set(data.keys()) - set(filtered_data.keys())
-            logger.debug(f"Filtered out unsupported fields when loading Program: {filtered_out}")
+            logger.debug(
+                f"Filtered out unsupported fields when loading Program: {filtered_out}"
+            )
 
         return cls(**filtered_data)
 
@@ -115,7 +121,9 @@ class ProgramDatabase(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def add(self, program: Program, iteration: Optional[int] = None, **kwargs: Any) -> str:
+    def add(
+        self, program: Program, iteration: Optional[int] = None, **kwargs: Any
+    ) -> str:
         """Add a program to the database.
 
         Args:
@@ -263,13 +271,16 @@ class ProgramDatabase(ABC):
             )
 
         if sorted_programs and (
-            self.best_program_id is None or sorted_programs[0].id != self.best_program_id
+            self.best_program_id is None
+            or sorted_programs[0].id != self.best_program_id
         ):
             self.best_program_id = sorted_programs[0].id
 
         return sorted_programs[0] if sorted_programs else None
 
-    def get_top_programs(self, n: int = 10, metric: Optional[str] = None) -> List[Program]:
+    def get_top_programs(
+        self, n: int = 10, metric: Optional[str] = None
+    ) -> List[Program]:
         """Get the top N programs, optionally by a specific metric."""
         if not self.programs:
             return []
@@ -340,7 +351,10 @@ class ProgramDatabase(ABC):
         )
 
     def get_statistics(
-        self, num_recent_iterations: int = 100, k: int = 20, improvement_threshold: float = 0.10
+        self,
+        num_recent_iterations: int = 100,
+        k: int = 20,
+        improvement_threshold: float = 0.10,
     ) -> Dict[str, Any]:
         """
         Get statistics about the database population.
@@ -409,14 +423,25 @@ class ProgramDatabase(ABC):
                     "threshold": f"{q25:.4f} <= score < {q50:.4f}",
                     "pct_programs": pct_lower_mid,
                 },
-                "bottom": {"threshold": f"score < {q25:.4f}", "pct_programs": pct_bottom},
+                "bottom": {
+                    "threshold": f"score < {q25:.4f}",
+                    "pct_programs": pct_bottom,
+                },
             }
             score_stats["unique_scores"] = unique_scores
         else:
-            score_stats = {"best": None, "q75": None, "q50": None, "q25": None, "worst": None}
+            score_stats = {
+                "best": None,
+                "q75": None,
+                "q50": None,
+                "q25": None,
+                "worst": None,
+            }
             top_scores = []
 
-        programs_with_parents = [p for p in self.programs.values() if p.parent_id is not None]
+        programs_with_parents = [
+            p for p in self.programs.values() if p.parent_id is not None
+        ]
         unique_parents = len({p.parent_id for p in programs_with_parents})
         avg_solutions_per_parent = (
             len(programs_with_parents) / unique_parents if unique_parents > 0 else 0.0
@@ -429,7 +454,8 @@ class ProgramDatabase(ABC):
                 p
                 for p in self.programs.values()
                 if p.metrics.get("combined_score") is not None
-                and p.metrics.get("combined_score") >= best_score - improvement_threshold
+                and p.metrics.get("combined_score")
+                >= best_score - improvement_threshold
             ]
             if near_best_programs:
                 iteration_near_best_achieved = min(
@@ -437,7 +463,9 @@ class ProgramDatabase(ABC):
                     for p in near_best_programs
                     if isinstance(p.iteration_found, int)
                 )
-                iterations_without_improvement = actual_last_iter - iteration_near_best_achieved
+                iterations_without_improvement = (
+                    actual_last_iter - iteration_near_best_achieved
+                )
 
         if not self.programs:
             recent_stats = {}
@@ -491,7 +519,9 @@ class ProgramDatabase(ABC):
                             ctx_score = self.programs[other_context_id].metrics.get(
                                 "combined_score"
                             )
-                            context_tuples.append((ctx_label, other_context_id, ctx_score))
+                            context_tuples.append(
+                                (ctx_label, other_context_id, ctx_score)
+                            )
                         else:
                             context_tuples.append((ctx_label, other_context_id, None))
 
@@ -505,7 +535,9 @@ class ProgramDatabase(ABC):
 
             from collections import Counter
 
-            recent_programs_with_parents = [p for p in recent_programs if p.parent_id is not None]
+            recent_programs_with_parents = [
+                p for p in recent_programs if p.parent_id is not None
+            ]
 
             most_reused_parent_ratio = 0.0
             most_reused_parent_score = None
@@ -518,11 +550,13 @@ class ProgramDatabase(ABC):
                 )
                 if parent_counts:
                     top_parent_id, parent_count = parent_counts.most_common(1)[0]
-                    most_reused_parent_ratio = parent_count / len(recent_programs_with_parents)
+                    most_reused_parent_ratio = parent_count / len(
+                        recent_programs_with_parents
+                    )
                     if top_parent_id in self.programs:
-                        most_reused_parent_score = self.programs[top_parent_id].metrics.get(
-                            "combined_score"
-                        )
+                        most_reused_parent_score = self.programs[
+                            top_parent_id
+                        ].metrics.get("combined_score")
 
             if recent_programs:
                 context_counts = Counter()
@@ -536,9 +570,9 @@ class ProgramDatabase(ABC):
                     top_ctx_id, context_count = context_counts.most_common(1)[0]
                     most_reused_context_ratio = context_count / programs_with_context
                     if top_ctx_id in self.programs:
-                        most_reused_context_score = self.programs[top_ctx_id].metrics.get(
-                            "combined_score"
-                        )
+                        most_reused_context_score = self.programs[
+                            top_ctx_id
+                        ].metrics.get("combined_score")
 
             recent_stats = {
                 "num_recent_iterations": min(num_recent_iterations, len(recent_scores)),

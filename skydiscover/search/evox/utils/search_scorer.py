@@ -36,7 +36,9 @@ class LogWindowScorer:
         if self._start_score is None:
             self.reset_window(best_score)
         if best_score is None:
-            best_score = self._best_scores[-1] if self._best_scores else self._start_score
+            best_score = (
+                self._best_scores[-1] if self._best_scores else self._start_score
+            )
         self._best_scores.append(float(best_score))
 
     def get_window_size(self) -> int:
@@ -55,7 +57,9 @@ class LogWindowScorer:
     ) -> Dict[str, Any]:
         if start_iteration is None:
             start_iteration = self._start_iteration
-        start = float(start_score if start_score is not None else (self._start_score or 0.0))
+        start = float(
+            start_score if start_score is not None else (self._start_score or 0.0)
+        )
         scores_to_use = best_scores if best_scores is not None else self._best_scores
         T_obs = len(scores_to_use) if scores_to_use else 0
         horizon_int = int(horizon) if horizon else max(1, T_obs)

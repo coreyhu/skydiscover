@@ -52,7 +52,9 @@ class DiscoveryResult:
 
     def __repr__(self) -> str:
         init = f"{self.initial_score:.4f}" if self.initial_score is not None else "N/A"
-        return f"DiscoveryResult(best_score={self.best_score:.4f}, initial_score={init})"
+        return (
+            f"DiscoveryResult(best_score={self.best_score:.4f}, initial_score={init})"
+        )
 
 
 def run_discovery(
@@ -140,7 +142,11 @@ async def _run_discovery_async(
         )
 
         # Resolve benchmark problem if configured and no initial_program provided
-        if initial_program is None and config_obj.benchmark and config_obj.benchmark.enabled:
+        if (
+            initial_program is None
+            and config_obj.benchmark
+            and config_obj.benchmark.enabled
+        ):
             try:
                 resolution = resolve_benchmark_problem(config_obj.benchmark)
                 initial_program = resolution.initial_program_path
@@ -159,15 +165,23 @@ async def _run_discovery_async(
             else None
         )
 
-        if program_path and config_obj.agentic.enabled and not config_obj.agentic.codebase_root:
-            config_obj.agentic.codebase_root = os.path.dirname(os.path.abspath(program_path))
+        if (
+            program_path
+            and config_obj.agentic.enabled
+            and not config_obj.agentic.codebase_root
+        ):
+            config_obj.agentic.codebase_root = os.path.dirname(
+                os.path.abspath(program_path)
+            )
 
         # Prepare the evaluator
         evaluator_path = prepare_evaluator(evaluator, temp_dir, temp_files)
 
         # Prepare the output directory
         search_type = (
-            getattr(config_obj.search, "type", None) if hasattr(config_obj, "search") else None
+            getattr(config_obj.search, "type", None)
+            if hasattr(config_obj, "search")
+            else None
         )
         if output_dir is None and cleanup:
             temp_dir = tempfile.mkdtemp(prefix="skydiscover_")
@@ -182,7 +196,11 @@ async def _run_discovery_async(
 
         # External backends (openevolve, shinkaevolve, gepa)
         if search_type:
-            from skydiscover.extras.external import KNOWN_EXTERNAL, get_runner, is_external
+            from skydiscover.extras.external import (
+                KNOWN_EXTERNAL,
+                get_runner,
+                is_external,
+            )
 
             if is_external(search_type):
                 if evaluator_env_vars:

@@ -89,7 +89,9 @@ class ClaudeCodeController(DiscoveryController):
             check=True,
         )
 
-    def _write_eval_script(self, workspace: Path, eval_type: str, timeout: int = 360) -> None:
+    def _write_eval_script(
+        self, workspace: Path, eval_type: str, timeout: int = 360
+    ) -> None:
         """Write run_eval.sh that Claude Code calls to score a candidate."""
         if eval_type == "python":
             script = (
@@ -158,7 +160,9 @@ class ClaudeCodeController(DiscoveryController):
         **kwargs,
     ) -> Optional[Program]:
         db_config = self.database.config
-        image_name = getattr(db_config, "docker_image", "skydiscover-claude-code:latest")
+        image_name = getattr(
+            db_config, "docker_image", "skydiscover-claude-code:latest"
+        )
         max_turns = max_iterations
 
         model = self.config.llm.models[0].name if self.config.llm.models else None
@@ -198,7 +202,10 @@ class ClaudeCodeController(DiscoveryController):
             if is_docker_eval:
                 self._write_eval_script(workspace, "docker", timeout=eval_timeout)
                 await loop.run_in_executor(
-                    None, self._save_evaluator_image, workspace, self.evaluator.image_tag
+                    None,
+                    self._save_evaluator_image,
+                    workspace,
+                    self.evaluator.image_tag,
                 )
             else:
                 shutil.copy(eval_path, workspace / "evaluator.py")
@@ -274,7 +281,9 @@ class ClaudeCodeController(DiscoveryController):
                 hard_stop_at = 0.0
 
                 with open(log_path, "w") as log_file:
-                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log_file)
+                    proc = subprocess.Popen(
+                        cmd, stdout=subprocess.PIPE, stderr=log_file
+                    )
                     try:
                         for raw_line in proc.stdout:
                             log_file.write(raw_line.decode("utf-8", errors="replace"))
@@ -326,7 +335,9 @@ class ClaudeCodeController(DiscoveryController):
                                     break
 
                             if hard_stop_at and time.monotonic() - hard_stop_at > 30:
-                                _write_progress("Hard stop grace period elapsed -- force killing")
+                                _write_progress(
+                                    "Hard stop grace period elapsed -- force killing"
+                                )
                                 proc.kill()
                                 break
 
@@ -342,7 +353,9 @@ class ClaudeCodeController(DiscoveryController):
                         # just as the hard stop fired).
                         try:
                             for remaining in proc.stdout:
-                                log_file.write(remaining.decode("utf-8", errors="replace"))
+                                log_file.write(
+                                    remaining.decode("utf-8", errors="replace")
+                                )
                                 log_file.flush()
                                 try:
                                     evt = json.loads(remaining)
@@ -400,7 +413,9 @@ class ClaudeCodeController(DiscoveryController):
                     )
                     self.database.add(prog, iteration=iteration)
                     score = er.metrics.get("combined_score", "?")
-                    _write_progress(f"[CHECKPOINT] turn ~{cumulative_turns}, score={score}")
+                    _write_progress(
+                        f"[CHECKPOINT] turn ~{cumulative_turns}, score={score}"
+                    )
                     if checkpoint_callback and ckpt_count % ckpt_interval == 0:
                         checkpoint_callback(iteration)
                 except Exception:
@@ -422,13 +437,17 @@ class ClaudeCodeController(DiscoveryController):
                             if c > total_cost_usd:
                                 total_cost_usd = c
                             if cumulative_turns == 0:
-                                actual_turns = max(actual_turns, evt.get("num_turns", 0))
+                                actual_turns = max(
+                                    actual_turns, evt.get("num_turns", 0)
+                                )
                         except (json.JSONDecodeError, ValueError):
                             continue
                 except OSError:
                     pass
 
-            eval_result = await self._final_evaluation(solution_path, initial_code, initial)
+            eval_result = await self._final_evaluation(
+                solution_path, initial_code, initial
+            )
             final_iter = max(actual_turns, 1)
 
             program = Program(
@@ -571,13 +590,17 @@ class ClaudeCodeController(DiscoveryController):
                 raise ValueError("Final eval timed out or returned no score")
             return _FinalResult(final_code, er, "final_eval")
         except Exception as e:
-            logger.warning(f"Final eval failed ({e}), re-evaluating best checkpoint code")
+            logger.warning(
+                f"Final eval failed ({e}), re-evaluating best checkpoint code"
+            )
 
         # Fall back to re-evaluating the best checkpoint's code.
         best = self.database.get_best_program()
         if best and best.solution and best.solution.strip():
             try:
-                er = await self.evaluator.evaluate_program(best.solution, str(uuid.uuid4()))
+                er = await self.evaluator.evaluate_program(
+                    best.solution, str(uuid.uuid4())
+                )
                 return _FinalResult(best.solution, er, "best_program_reeval")
             except Exception as e2:
                 logger.warning(f"Best program re-eval also failed ({e2})")

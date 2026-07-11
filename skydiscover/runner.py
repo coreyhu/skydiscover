@@ -60,19 +60,25 @@ class Runner:
             self._load_initial_program() if initial_program_path else None
         )
         if self.initial_program_solution and not self.config.language:
-            self.config.language = extract_solution_language(self.initial_program_solution)
+            self.config.language = extract_solution_language(
+                self.initial_program_solution
+            )
         if not self.config.language:
             self.config.language = "python"
 
         # Set the file extension
-        ext = os.path.splitext(initial_program_path)[1] if initial_program_path else ".py"
+        ext = (
+            os.path.splitext(initial_program_path)[1] if initial_program_path else ".py"
+        )
         ext = ext or ".py"
         self.file_extension = ext if ext.startswith(".") else f".{ext}"
         if self.config.file_suffix == ".py":
             self.config.file_suffix = self.file_extension
 
         # Create the database
-        self.database = create_database(self.config.search.type, self.config.search.database)
+        self.database = create_database(
+            self.config.search.type, self.config.search.database
+        )
         self.database.language = self.config.language or "python"
         self.evaluation_file = evaluation_file
         self.evaluator_env_vars = dict(evaluator_env_vars or {})
@@ -80,12 +86,18 @@ class Runner:
         # Initialize the discovery controller
         self.discovery_controller: Optional[DiscoveryController] = None
 
-        logger.info(f"Runner ready: search={self.name}, program={self.initial_program_path}")
+        logger.info(
+            f"Runner ready: search={self.name}, program={self.initial_program_path}"
+        )
 
     @property
     def initial_score(self) -> Optional[float]:
         """Score of the seed program, or None if unavailable."""
-        if not self.database or not self.database.programs or not self.initial_program_solution:
+        if (
+            not self.database
+            or not self.database.programs
+            or not self.initial_program_solution
+        ):
             return None
 
         seed_solution = self.initial_program_solution
@@ -118,7 +130,9 @@ class Runner:
         Returns:
             Best Program found, or None if no valid programs were produced.
         """
-        max_iterations = iterations if iterations is not None else self.config.max_iterations
+        max_iterations = (
+            iterations if iterations is not None else self.config.max_iterations
+        )
 
         start_iteration = 0
         if checkpoint_path and os.path.exists(checkpoint_path):
@@ -164,7 +178,9 @@ class Runner:
             self._push_existing_to_monitor()
             self._install_signal_handlers()
 
-            discovery_start = start_iteration + 1 if should_add_initial else start_iteration
+            discovery_start = (
+                start_iteration + 1 if should_add_initial else start_iteration
+            )
             self.database.log_status()
 
             def checkpoint_cb(iteration: int) -> None:
@@ -187,8 +203,10 @@ class Runner:
             best = self._get_best_program()
             if best:
                 try:
-                    test_result = await self.discovery_controller.evaluator.evaluate_program(
-                        best.solution, best.id, mode="test"
+                    test_result = (
+                        await self.discovery_controller.evaluator.evaluate_program(
+                            best.solution, best.id, mode="test"
+                        )
                     )
                     for k, v in test_result.metrics.items():
                         best.metrics[f"test_{k}"] = v
@@ -213,7 +231,9 @@ class Runner:
             if monitor_server:
                 try:
                     reason = "early_stopping" if early_stopped else "completed"
-                    monitor_server.push_event({"type": "discovery_complete", "reason": reason})
+                    monitor_server.push_event(
+                        {"type": "discovery_complete", "reason": reason}
+                    )
                     time.sleep(0.5)
                     monitor_server.stop()
                 except Exception:
@@ -223,7 +243,9 @@ class Runner:
         best_program = self._get_best_program()
         if best_program:
             status = "early stopping" if early_stopped else "completed"
-            logger.info(f"Discovery {status}. Best: {format_metrics(best_program.metrics)}")
+            logger.info(
+                f"Discovery {status}. Best: {format_metrics(best_program.metrics)}"
+            )
             self._save_best_program(best_program)
             return best_program
 
@@ -245,7 +267,9 @@ class Runner:
             try:
                 result = await self.discovery_controller.llms.generate(
                     system_message="Generate an image based on the following description. Also provide brief reasoning about your creative choices.",
-                    messages=[{"role": "user", "content": self.initial_program_solution}],
+                    messages=[
+                        {"role": "user", "content": self.initial_program_solution}
+                    ],
                     image_output=True,
                     output_dir=img_dir,
                     program_id=program_id,
@@ -269,7 +293,11 @@ class Runner:
             initial_image_path = metrics.pop("image_path")
 
         program = get_program(
-            self.config, self.initial_program_solution, program_id, metrics, start_iteration
+            self.config,
+            self.initial_program_solution,
+            program_id,
+            metrics,
+            start_iteration,
         )
         program.artifacts = eval_result.artifacts
 
@@ -292,7 +320,10 @@ class Runner:
         if not self.config.monitor.enabled:
             return None
         try:
-            from skydiscover.extras.monitor import MonitorServer, create_monitor_callback
+            from skydiscover.extras.monitor import (
+                MonitorServer,
+                create_monitor_callback,
+            )
 
             server = MonitorServer(
                 host=self.config.monitor.host,
@@ -354,8 +385,12 @@ class Runner:
                     prog, getattr(prog, "iteration_found", 0)
                 )
             except Exception:
-                logger.debug("Monitor callback failed for program %s", prog.id, exc_info=True)
-        logger.info(f"Pushed {len(self.database.programs)} existing program(s) to monitor")
+                logger.debug(
+                    "Monitor callback failed for program %s", prog.id, exc_info=True
+                )
+        logger.info(
+            f"Pushed {len(self.database.programs)} existing program(s) to monitor"
+        )
 
     def _install_signal_handlers(self) -> None:
         def on_signal(signum, frame):
@@ -386,7 +421,9 @@ class Runner:
 
     def _setup_logging(self) -> None:
         log_dir = self.config.log_dir or os.path.join(self.output_dir, "logs")
-        setup_search_logging(log_level=self.config.log_level, log_dir=log_dir, name=self.name)
+        setup_search_logging(
+            log_level=self.config.log_level, log_dir=log_dir, name=self.name
+        )
 
     def _load_initial_program(self) -> str:
         with open(self.initial_program_path, "r") as f:
@@ -405,7 +442,9 @@ class Runner:
                 os.path.join(checkpoint_path, f"best_program{self.file_extension}"), "w"
             ) as f:
                 f.write(best.solution)
-            with open(os.path.join(checkpoint_path, "best_program_info.json"), "w") as f:
+            with open(
+                os.path.join(checkpoint_path, "best_program_info.json"), "w"
+            ) as f:
                 from skydiscover.search.utils.checkpoint_manager import SafeJSONEncoder
 
                 json.dump(
@@ -473,6 +512,8 @@ class Runner:
             if img and os.path.exists(img):
                 import shutil
 
-                shutil.copy2(img, os.path.join(best_dir, "best_image" + os.path.splitext(img)[1]))
+                shutil.copy2(
+                    img, os.path.join(best_dir, "best_image" + os.path.splitext(img)[1])
+                )
 
         logger.info(f"Best program saved to {best_dir}")

@@ -56,7 +56,7 @@ def validate_packing_overlap_wtol(circles: np.ndarray, tol: float = 1e-6) -> Non
             dist = np.sqrt(np.sum((circles[i, :2] - circles[j, :2]) ** 2))
             if dist < circles[i, 2] + circles[j, 2] - tol:
                 raise ValueError(
-                    f"Circles {i} and {j} overlap: dist={dist}, r1+r2={circles[i,2]+circles[j,2]}"
+                    f"Circles {i} and {j} overlap: dist={dist}, r1+r2={circles[i, 2] + circles[j, 2]}"
                 )
 
 
@@ -93,7 +93,7 @@ def evaluate(program_path: str):
 
         if circles.shape != (NUM_CIRCLES, 3):
             raise ValueError(
-                f"Invalid shapes: circles = {circles.shape}, expected {(NUM_CIRCLES,3)}"
+                f"Invalid shapes: circles = {circles.shape}, expected {(NUM_CIRCLES, 3)}"
             )
 
         validate_packing_radii(circles[:, -1])

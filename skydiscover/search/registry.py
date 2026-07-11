@@ -41,7 +41,9 @@ def register_database(search_type: str, database_class: Type[ProgramDatabase]) -
     )
 
 
-def register_controller(search_type: str, controller_class: Type[DiscoveryController]) -> None:
+def register_controller(
+    search_type: str, controller_class: Type[DiscoveryController]
+) -> None:
     """Register a discovery controller class for a search type."""
     _CONTROLLER_REGISTRY[search_type] = controller_class
     logger.debug(
@@ -59,8 +61,12 @@ def create_database(search_type: str, config: DatabaseConfig) -> ProgramDatabase
     Supports both registered search types and dynamic loading for "evox"/"evolve" types
     when a custom database_file_path is specified.
     """
-    if search_type in ("evox", "evolve") and getattr(config, "database_file_path", None):
-        database_class, program_class = load_database_from_file(config.database_file_path)
+    if search_type in ("evox", "evolve") and getattr(
+        config, "database_file_path", None
+    ):
+        database_class, program_class = load_database_from_file(
+            config.database_file_path
+        )
         db = database_class(search_type, config)
         db._program_class = program_class
         return db
@@ -92,9 +98,15 @@ def get_program(
     """
     search_type = config.search.type
 
-    if search_type == "evox" and getattr(config.search.database, "database_file_path", None):
-        logger.info(f"Using search strategy from: {config.search.database.database_file_path}")
-        _, program_class = load_database_from_file(config.search.database.database_file_path)
+    if search_type == "evox" and getattr(
+        config.search.database, "database_file_path", None
+    ):
+        logger.info(
+            f"Using search strategy from: {config.search.database.database_file_path}"
+        )
+        _, program_class = load_database_from_file(
+            config.search.database.database_file_path
+        )
         return program_class(
             id=initial_program_id,
             solution=initial_program_solution,
@@ -147,7 +159,9 @@ def setup_search(
 
         parent_models = [copy.deepcopy(m) for m in parent_llm_config.models]
         config.llm.models = parent_models
-        config.llm.evaluator_models = [copy.deepcopy(m) for m in parent_llm_config.models]
+        config.llm.evaluator_models = [
+            copy.deepcopy(m) for m in parent_llm_config.models
+        ]
         config.llm.guide_models = [copy.deepcopy(m) for m in parent_llm_config.models]
         # Sync top-level api_base/api_key from the first parent model
         config.llm.api_base = parent_models[0].api_base or config.llm.api_base

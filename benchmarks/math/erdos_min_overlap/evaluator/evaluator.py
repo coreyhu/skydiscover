@@ -29,7 +29,9 @@ def verify_c5_solution(h_values: np.ndarray, c5_achieved: float, n_points: int):
 
     # Verify h(x) in [0, 1] constraint
     if np.any(h_values < 0) or np.any(h_values > 1):
-        raise ValueError(f"h(x) is not in [0, 1]. Range: [{h_values.min()}, {h_values.max()}]")
+        raise ValueError(
+            f"h(x) is not in [0, 1]. Range: [{h_values.min()}, {h_values.max()}]"
+        )
 
     # Verify integral of h = 1 constraint
     dx = 2.0 / n_points
@@ -44,7 +46,9 @@ def verify_c5_solution(h_values: np.ndarray, c5_achieved: float, n_points: int):
 
     # Check for consistency
     if not np.isclose(computed_c5, c5_achieved, atol=1e-4):
-        raise ValueError(f"C5 mismatch: reported {c5_achieved:.6f}, computed {computed_c5:.6f}")
+        raise ValueError(
+            f"C5 mismatch: reported {c5_achieved:.6f}, computed {computed_c5:.6f}"
+        )
 
 
 def evaluate(program_path: str):

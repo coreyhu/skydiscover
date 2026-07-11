@@ -21,12 +21,16 @@ import numpy as np
 BENCHMARK = 1.5052939684401607
 
 
-def verify_autocorrelation_solution(f_values: np.ndarray, c1_achieved: float, n_points: int):
+def verify_autocorrelation_solution(
+    f_values: np.ndarray, c1_achieved: float, n_points: int
+):
     """Verify the autocorrelation solution for UPPER BOUND optimization"""
 
     # Check shape
     if f_values.shape != (n_points,):
-        raise ValueError(f"Expected function values shape {(n_points,)}. Got {f_values.shape}.")
+        raise ValueError(
+            f"Expected function values shape {(n_points,)}. Got {f_values.shape}."
+        )
 
     # Check non-negativity
     if np.any(f_values < 0.0):

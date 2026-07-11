@@ -94,7 +94,9 @@ class ParadigmGenerator:
 
         parts = []
         for objective in self.objective_names:
-            direction = "maximize" if self.higher_is_better.get(objective, True) else "minimize"
+            direction = (
+                "maximize" if self.higher_is_better.get(objective, True) else "minimize"
+            )
             parts.append(f"{objective} ({direction})")
 
         text = "Optimize the Pareto trade-offs across: " + ", ".join(parts) + "."
@@ -179,7 +181,9 @@ class ParadigmGenerator:
                 response = result.text
 
                 if not response:
-                    logger.warning(f"Empty response from LLM (attempt {attempt + 1}/{MAX_RETRIES})")
+                    logger.warning(
+                        f"Empty response from LLM (attempt {attempt + 1}/{MAX_RETRIES})"
+                    )
                     last_error = "Empty response"
                     if attempt < MAX_RETRIES - 1:
                         await asyncio.sleep(backoff)
@@ -194,7 +198,9 @@ class ParadigmGenerator:
                     )
                     last_error = "Parse failure"
                     if attempt < MAX_RETRIES - 1:
-                        logger.info(f"Retrying paradigm generation in {backoff:.1f}s...")
+                        logger.info(
+                            f"Retrying paradigm generation in {backoff:.1f}s..."
+                        )
                         await asyncio.sleep(backoff)
                         backoff *= BACKOFF_MULTIPLIER
                     continue
@@ -202,7 +208,7 @@ class ParadigmGenerator:
                 logger.info(f"Generated {len(paradigms)} paradigms:")
                 for i, p in enumerate(paradigms):
                     logger.info(
-                        f"  [{i+1}] {p.get('idea', 'N/A')} (approach: {p.get('approach_type', 'N/A')})"
+                        f"  [{i + 1}] {p.get('idea', 'N/A')} (approach: {p.get('approach_type', 'N/A')})"
                     )
                 return paradigms
 
@@ -217,7 +223,9 @@ class ParadigmGenerator:
                     await asyncio.sleep(backoff)
                     backoff *= BACKOFF_MULTIPLIER
 
-        logger.error(f"Paradigm generation failed after {MAX_RETRIES} attempts: {last_error}")
+        logger.error(
+            f"Paradigm generation failed after {MAX_RETRIES} attempts: {last_error}"
+        )
         return []
 
     def _get_system_message(self) -> str:
@@ -626,7 +634,7 @@ Example:
         {{
             "idea": "Use scipy.optimize.minimize with SLSQP",
             "description": "Apply scipy.optimize.minimize directly to optimize all variables together...",
-            "what_to_optimize": "{', '.join(self.objective_names) if self.objective_names else 'primary evaluator score'}",
+            "what_to_optimize": "{", ".join(self.objective_names) if self.objective_names else "primary evaluator score"}",
             "cautions": "Ensure constraints are properly formulated, use multiple starting points",
             "approach_type": "scipy.optimize.minimize"
         }}

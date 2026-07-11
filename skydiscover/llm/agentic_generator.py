@@ -117,7 +117,9 @@ class AgenticGenerator:
             if not tool_calls:
                 if text_content:
                     logger.info(
-                        "Agent produced text at step %d (%d files read)", step, len(files_read)
+                        "Agent produced text at step %d (%d files read)",
+                        step,
+                        len(files_read),
                     )
                     return text_content
                 conversation.append(
@@ -130,13 +132,21 @@ class AgenticGenerator:
 
             for tc in tool_calls:
                 fn = tc.get("function", {})
-                name, raw, tc_id = fn.get("name", ""), fn.get("arguments", "{}"), tc.get("id", "")
+                name, raw, tc_id = (
+                    fn.get("name", ""),
+                    fn.get("arguments", "{}"),
+                    tc.get("id", ""),
+                )
 
                 try:
                     args = json.loads(raw)
                 except (json.JSONDecodeError, TypeError) as e:
                     conversation.append(
-                        {"role": "tool", "tool_call_id": tc_id, "content": f"Bad JSON: {e}"}
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc_id,
+                            "content": f"Bad JSON: {e}",
+                        }
                     )
                     continue
 
@@ -152,7 +162,11 @@ class AgenticGenerator:
 
                 result = self._run_tool(name, args, files_read)
                 conversation.append(
-                    {"role": "tool", "tool_call_id": tc_id, "content": result["content"]}
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc_id,
+                        "content": result["content"],
+                    }
                 )
 
         logger.warning("Agent loop ended without producing code")
@@ -182,7 +196,9 @@ class AgenticGenerator:
             return await self._call_llm_responses(model, system_message, conversation)
 
         messages = [{"role": "system", "content": system_message}] + conversation
-        is_reasoning = is_openai_reasoning_model(model.model, getattr(model, "api_base", "") or "")
+        is_reasoning = is_openai_reasoning_model(
+            model.model, getattr(model, "api_base", "") or ""
+        )
 
         params: Dict[str, Any] = {
             "model": model.model,
@@ -209,9 +225,14 @@ class AgenticGenerator:
                 None, lambda: model.client.chat.completions.create(**params)
             )
         except Exception as exc:
-            if "unsupported" not in str(exc).lower() and "not found" not in str(exc).lower():
+            if (
+                "unsupported" not in str(exc).lower()
+                and "not found" not in str(exc).lower()
+            ):
                 raise
-            logger.info("Chat Completions unsupported for agentic; falling back to Responses API")
+            logger.info(
+                "Chat Completions unsupported for agentic; falling back to Responses API"
+            )
             model._use_responses_api = True
             return await self._call_llm_responses(model, system_message, conversation)
 
@@ -222,7 +243,10 @@ class AgenticGenerator:
                 {
                     "id": tc.id,
                     "type": "function",
-                    "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    "function": {
+                        "name": tc.function.name,
+                        "arguments": tc.function.arguments,
+                    },
                 }
                 for tc in msg.tool_calls
             ]
@@ -235,7 +259,9 @@ class AgenticGenerator:
         conversation: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Call the LLM via the Responses API (Azure-compatible) with tool support."""
-        is_reasoning = is_openai_reasoning_model(model.model, getattr(model, "api_base", "") or "")
+        is_reasoning = is_openai_reasoning_model(
+            model.model, getattr(model, "api_base", "") or ""
+        )
 
         input_items = convert_messages_to_responses_input(conversation)
 
@@ -272,7 +298,9 @@ class AgenticGenerator:
     # Tools
     # ------------------------------------------------------------------
 
-    def _run_tool(self, name: str, args: Dict[str, Any], files_read: set) -> Dict[str, Any]:
+    def _run_tool(
+        self, name: str, args: Dict[str, Any], files_read: set
+    ) -> Dict[str, Any]:
         try:
             if name == "read_file":
                 return self._tool_read_file(args, files_read)
@@ -299,7 +327,9 @@ class AgenticGenerator:
             return _err(err)
 
         if resolved not in files_read and len(files_read) >= self.config.max_files_read:
-            return _err(f"Read limit ({self.config.max_files_read}). Output your solution.")
+            return _err(
+                f"Read limit ({self.config.max_files_read}). Output your solution."
+            )
 
         try:
             with open(resolved, "r", encoding="utf-8", errors="replace") as f:
@@ -326,7 +356,10 @@ class AgenticGenerator:
             f"{i:4d} | {ln.rstrip(chr(10))}"
             for i, ln in enumerate(content.splitlines(True), start=start + 1)
         ]
-        return {"content": f"{rel} (lines {start + 1}-{end} of {total})\n" + "\n".join(numbered)}
+        return {
+            "content": f"{rel} (lines {start + 1}-{end} of {total})\n"
+            + "\n".join(numbered)
+        }
 
     def _tool_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
         pattern = args.get("pattern", "")
@@ -335,7 +368,9 @@ class AgenticGenerator:
         if not pattern:
             return _err("'pattern' is required.")
         if len(pattern) > self.config.max_regex_length:
-            return _err(f"Pattern too long ({len(pattern)} > {self.config.max_regex_length}).")
+            return _err(
+                f"Pattern too long ({len(pattern)} > {self.config.max_regex_length})."
+            )
 
         safety_err = _check_regex_safety(pattern)
         if safety_err:
@@ -356,7 +391,9 @@ class AgenticGenerator:
         max_results = self.config.max_search_results
 
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = [d for d in dirnames if not d.startswith(".") and d not in excluded]
+            dirnames[:] = [
+                d for d in dirnames if not d.startswith(".") and d not in excluded
+            ]
             for fname in filenames:
                 if not fnmatch.fnmatch(fname, glob_pat):
                     continue
@@ -372,7 +409,9 @@ class AgenticGenerator:
                     continue
 
                 n_files += 1
-                ok, hits, err = _safe_regex_search(compiled, text, self.config.regex_timeout)
+                ok, hits, err = _safe_regex_search(
+                    compiled, text, self.config.regex_timeout
+                )
                 if not ok:
                     return _err(err)
 
@@ -389,7 +428,11 @@ class AgenticGenerator:
         if not matches:
             return {"content": f"No matches for '{pattern}' in {n_files} files."}
 
-        suffix = f"\n(capped at {max_results} results)" if len(matches) >= max_results else ""
+        suffix = (
+            f"\n(capped at {max_results} results)"
+            if len(matches) >= max_results
+            else ""
+        )
         return {"content": "\n".join(matches) + suffix}
 
 
@@ -478,7 +521,9 @@ def _validate_path(
     return True, resolved, ""
 
 
-_NESTED_QUANTIFIER_RE = re.compile(r"\([^)]*[+*][^)]*\)\s*[+*?]|\([^)]*[+*][^)]*\)\s*\{")
+_NESTED_QUANTIFIER_RE = re.compile(
+    r"\([^)]*[+*][^)]*\)\s*[+*?]|\([^)]*[+*][^)]*\)\s*\{"
+)
 
 _MAX_SEARCH_LINE_LEN = 2000
 
@@ -490,7 +535,9 @@ def _check_regex_safety(pattern: str) -> Optional[str]:
     return None
 
 
-_REGEX_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="regex")
+_REGEX_EXECUTOR = concurrent.futures.ThreadPoolExecutor(
+    max_workers=1, thread_name_prefix="regex"
+)
 
 
 def _safe_regex_search(

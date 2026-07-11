@@ -65,7 +65,9 @@ class Evaluator:
             sys.path.insert(0, eval_dir)
 
         self._module_name = f"_skydiscover_eval_{uuid.uuid4().hex}"
-        spec = importlib.util.spec_from_file_location(self._module_name, self.evaluation_file)
+        spec = importlib.util.spec_from_file_location(
+            self._module_name, self.evaluation_file
+        )
         if spec is None or spec.loader is None:
             raise ImportError(f"Cannot load module from {self.evaluation_file}")
 
@@ -88,7 +90,9 @@ class Evaluator:
                 f"cascade_evaluation is true but {self.evaluation_file} has no evaluate_stage1 — will fall back to direct evaluation"
             )
         elif not hasattr(module, "evaluate_stage2"):
-            logger.warning(f"{self.evaluation_file} has evaluate_stage1 but no evaluate_stage2")
+            logger.warning(
+                f"{self.evaluation_file} has evaluate_stage1 but no evaluate_stage2"
+            )
 
     # ------------------------------------------------------------------
     # Public API
@@ -114,13 +118,17 @@ class Evaluator:
         last_exception = None
         for attempt in range(self.config.max_retries + 1):
             try:
-                with tempfile.NamedTemporaryFile(suffix=self.program_suffix, delete=False) as f:
+                with tempfile.NamedTemporaryFile(
+                    suffix=self.program_suffix, delete=False
+                ) as f:
                     f.write(program_solution.encode("utf-8"))
                     temp_path = f.name
             except OSError as e:
                 if e.errno == errno.ENOSPC:
                     logger.error("Disk full — cannot create temp file")
-                    return EvaluationResult(metrics={"error": 0.0, "disk_space_error": True})
+                    return EvaluationResult(
+                        metrics={"error": 0.0, "disk_space_error": True}
+                    )
                 raise
 
             sidecar_path = None
@@ -141,7 +149,9 @@ class Evaluator:
                 eval_result = self._normalize_result(result)
 
                 if self.llm_judge:
-                    llm_result = await self.llm_judge.evaluate(program_solution, program_id)
+                    llm_result = await self.llm_judge.evaluate(
+                        program_solution, program_id
+                    )
                     if llm_result:
                         for name, value in llm_result.metrics.items():
                             eval_result.metrics[f"llm_{name}"] = value
@@ -275,7 +285,9 @@ class Evaluator:
                 },
             )
 
-        if not self._passes_threshold(stage1.metrics, self.config.cascade_thresholds[0]):
+        if not self._passes_threshold(
+            stage1.metrics, self.config.cascade_thresholds[0]
+        ):
             return stage1
 
         if not hasattr(module, "evaluate_stage2"):
@@ -293,7 +305,9 @@ class Evaluator:
             return stage1
         except Exception as e:
             logger.error(f"Stage 2 failed: {e}")
-            stage1.artifacts.update({"failure_stage": "stage2", "stage2_stderr": str(e)})
+            stage1.artifacts.update(
+                {"failure_stage": "stage2", "stage2_stderr": str(e)}
+            )
             return stage1
 
         # Merge stages
@@ -318,6 +332,8 @@ class Evaluator:
                 return float(score) >= threshold
 
         valid = [
-            float(v) for k, v in metrics.items() if k != "error" and isinstance(v, (int, float))
+            float(v)
+            for k, v in metrics.items()
+            if k != "error" and isinstance(v, (int, float))
         ]
         return (sum(valid) / len(valid)) >= threshold if valid else False

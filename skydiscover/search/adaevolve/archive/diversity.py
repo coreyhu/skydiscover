@@ -165,7 +165,9 @@ class CodeDiversity(DiversityStrategy):
             features.add(f"class:{cls}")
 
         # Key function calls (common libraries)
-        calls = re.findall(r"([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+)\s*\(", solution)
+        calls = re.findall(
+            r"([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+)\s*\(", solution
+        )
         for call in calls:
             features.add(f"call:{call}")
 
@@ -222,7 +224,9 @@ class MetricDiversity(DiversityStrategy):
                     lo, hi = self._bounds[key]
                     self._bounds[key] = (min(lo, val), max(hi, val))
 
-    def _safe_get_numeric(self, metrics: Dict, key: str, default: float) -> Optional[float]:
+    def _safe_get_numeric(
+        self, metrics: Dict, key: str, default: float
+    ) -> Optional[float]:
         """Safely get a numeric value from metrics, returning None if not numeric."""
         val = metrics.get(key)
         if val is None:
@@ -345,7 +349,9 @@ class HybridDiversity(DiversityStrategy):
         return total
 
 
-def create_diversity_strategy(strategy_type: str = "code", **kwargs) -> DiversityStrategy:
+def create_diversity_strategy(
+    strategy_type: str = "code", **kwargs
+) -> DiversityStrategy:
     """
     Factory function to create diversity strategies.
 

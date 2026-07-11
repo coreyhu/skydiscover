@@ -96,7 +96,9 @@ class DiscreteOptimizer:
 
     def _loss_fn(self, continuous_decomposition: tuple) -> jnp.ndarray:
         # Snap the continuous parameters to the discrete grid
-        discrete_decomposition = jax.tree_util.tree_map(round_to_half_ste, continuous_decomposition)
+        discrete_decomposition = jax.tree_util.tree_map(
+            round_to_half_ste, continuous_decomposition
+        )
         # Compute the loss using only these exact half-integer values
         reconstructed = jnp.einsum("ir,jr,kr->ijk", *discrete_decomposition)
         return l2_loss_real(reconstructed, self.target_tensor)
@@ -123,7 +125,7 @@ def run():
     main_key = jax.random.PRNGKey(42)
 
     # --- PHASE 1: CONTINUOUS EXPLORATION ---
-    print(f"\n{'='*20} PHASE 1: Continuous Exploration {'='*20}")
+    print(f"\n{'=' * 20} PHASE 1: Continuous Exploration {'=' * 20}")
     best_loss_phase1 = float("inf")
     best_latent_decomp = None
 
@@ -133,7 +135,7 @@ def run():
     jit_train_step_continuous = jax.jit(train_step, static_argnums=(2, 3))
 
     for i in range(hypers.num_restarts):
-        print(f"\n--- Restart {i+1}/{hypers.num_restarts} ---")
+        print(f"\n--- Restart {i + 1}/{hypers.num_restarts} ---")
         main_key, restart_key = jax.random.split(main_key)
         init_fn = jax.nn.initializers.normal(stddev=hypers.init_scale)
         latent_decomp = (
@@ -165,10 +167,12 @@ def run():
             best_latent_decomp = latent_decomp
 
     # --- PHASE 2: DISCRETE FINE-TUNING ---
-    print(f"\n{'='*20} PHASE 2: Discrete Fine-tuning (STE) {'='*20}")
+    print(f"\n{'=' * 20} PHASE 2: Discrete Fine-tuning (STE) {'=' * 20}")
     print(f"Starting with best continuous solution (loss: {best_loss_phase1:.8f})")
 
-    continuous_params = continuous_optimizer._get_constrained_decomposition(best_latent_decomp)
+    continuous_params = continuous_optimizer._get_constrained_decomposition(
+        best_latent_decomp
+    )
 
     discrete_optimizer = DiscreteOptimizer(target_tensor, hypers)
     opt_state = discrete_optimizer.opt.init(continuous_params)
@@ -178,21 +182,28 @@ def run():
 
     for step in tqdm.tqdm(range(hypers.phase2_steps), desc="Discrete Fine-tuning"):
         continuous_params, opt_state, loss = jit_train_step_discrete(
-            continuous_params, opt_state, discrete_optimizer.opt, discrete_optimizer._loss_fn
+            continuous_params,
+            opt_state,
+            discrete_optimizer.opt,
+            discrete_optimizer._loss_fn,
         )
         if (step + 1) % 2000 == 0:
-            print(f"Step {step+1} | Discrete Loss: {loss:.8f}")
+            print(f"Step {step + 1} | Discrete Loss: {loss:.8f}")
         if loss < 1e-7:
             print("\nFound a perfect solution!")
             break
 
-    final_discrete_decomposition = jax.tree_util.tree_map(round_to_half_ste, continuous_params)
+    final_discrete_decomposition = jax.tree_util.tree_map(
+        round_to_half_ste, continuous_params
+    )
     final_loss = l2_loss_real(
         target_tensor, jnp.einsum("ir,jr,kr->ijk", *final_discrete_decomposition)
     )
     print(f"Search complete. Final discrete loss: {final_loss:.8f}")
 
-    final_decomposition_np = jax.tree_util.tree_map(np.array, final_discrete_decomposition)
+    final_decomposition_np = jax.tree_util.tree_map(
+        np.array, final_discrete_decomposition
+    )
     return final_decomposition_np, n, m, p, float(final_loss), hypers.rank
 
 

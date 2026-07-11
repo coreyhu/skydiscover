@@ -26,7 +26,10 @@ NUM_POINTS = 14
 
 def triangle_area(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> float:
     """Calculates the area of a triangle given its vertices p1, p2, and p3."""
-    return abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2
+    return (
+        abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1]))
+        / 2
+    )
 
 
 def evaluate(program_path: str):
@@ -54,10 +57,15 @@ def evaluate(program_path: str):
             points = np.array(points)
 
         if points.shape != (NUM_POINTS, 2):
-            raise ValueError(f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS,2)}")
+            raise ValueError(
+                f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS, 2)}"
+            )
 
         min_triangle_area = min(
-            [triangle_area(p1, p2, p3) for p1, p2, p3 in itertools.combinations(points, 3)]
+            [
+                triangle_area(p1, p2, p3)
+                for p1, p2, p3 in itertools.combinations(points, 3)
+            ]
         )
         convex_hull_area = ConvexHull(points).volume
         min_area_normalized = min_triangle_area / convex_hull_area

@@ -100,7 +100,9 @@ class TestOpenAILLMParams:
     async def test_params_exclude_none_top_p(self):
         llm = self._make_llm(top_p=None)
         llm._call_api = AsyncMock(return_value="response")
-        await llm.generate(system_message="sys", messages=[{"role": "user", "content": "user"}])
+        await llm.generate(
+            system_message="sys", messages=[{"role": "user", "content": "user"}]
+        )
         params = llm._call_api.call_args[0][0]
         assert "top_p" not in params
         assert "temperature" in params
@@ -109,7 +111,9 @@ class TestOpenAILLMParams:
     async def test_params_exclude_none_temperature(self):
         llm = self._make_llm(temperature=None)
         llm._call_api = AsyncMock(return_value="response")
-        await llm.generate(system_message="sys", messages=[{"role": "user", "content": "user"}])
+        await llm.generate(
+            system_message="sys", messages=[{"role": "user", "content": "user"}]
+        )
         params = llm._call_api.call_args[0][0]
         assert "temperature" not in params
         assert "top_p" in params
@@ -118,7 +122,9 @@ class TestOpenAILLMParams:
     async def test_params_exclude_both_none(self):
         llm = self._make_llm(temperature=None, top_p=None)
         llm._call_api = AsyncMock(return_value="response")
-        await llm.generate(system_message="sys", messages=[{"role": "user", "content": "user"}])
+        await llm.generate(
+            system_message="sys", messages=[{"role": "user", "content": "user"}]
+        )
         params = llm._call_api.call_args[0][0]
         assert "temperature" not in params
         assert "top_p" not in params

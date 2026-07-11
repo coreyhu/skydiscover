@@ -38,7 +38,9 @@ logger = logging.getLogger(__name__)
 ######################### ROUTING #########################
 
 
-def get_discovery_controller(controller_input: DiscoveryControllerInput) -> DiscoveryController:
+def get_discovery_controller(
+    controller_input: DiscoveryControllerInput,
+) -> DiscoveryController:
     """
     Get the discovery controller for a given search type.
 
@@ -47,7 +49,9 @@ def get_discovery_controller(controller_input: DiscoveryControllerInput) -> Disc
     """
     search_type = controller_input.config.search.type
     controller_class = _CONTROLLER_REGISTRY.get(search_type, DiscoveryController)
-    logger.debug(f"Using controller {controller_class.__name__} for search type '{search_type}'")
+    logger.debug(
+        f"Using controller {controller_class.__name__} for search type '{search_type}'"
+    )
     return controller_class(controller_input)
 
 

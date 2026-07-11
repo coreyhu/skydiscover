@@ -73,7 +73,9 @@ class HarborEvaluator(ContainerizedEvaluator):
             text=True,
         )
         if result.returncode != 0:
-            raise RuntimeError(f"Docker build failed for {dockerfile_dir}:\n{result.stderr}")
+            raise RuntimeError(
+                f"Docker build failed for {dockerfile_dir}:\n{result.stderr}"
+            )
         return tag
 
     # ------------------------------------------------------------------
@@ -141,7 +143,9 @@ class HarborEvaluator(ContainerizedEvaluator):
             logger.error(f"docker exec timed out after {self.config.timeout}s")
             return EvaluationResult(
                 metrics={"combined_score": 0.0},
-                artifacts={"error": f"docker exec timed out after {self.config.timeout}s"},
+                artifacts={
+                    "error": f"docker exec timed out after {self.config.timeout}s"
+                },
             )
 
         finally:
@@ -163,7 +167,9 @@ class HarborEvaluator(ContainerizedEvaluator):
             match = re.search(r"timeout_sec\s*=\s*(\d+)", text)
             if match:
                 config.timeout = int(match.group(1))
-                logger.info(f"Harbor task.toml: set evaluator timeout to {config.timeout}s")
+                logger.info(
+                    f"Harbor task.toml: set evaluator timeout to {config.timeout}s"
+                )
         except Exception as e:
             logger.warning(f"Failed to read task.toml: {e}")
 
@@ -185,7 +191,9 @@ class HarborEvaluator(ContainerizedEvaluator):
         else:
             raise RuntimeError(f"No tests/ directory found in {self.task_dir}")
 
-    def _read_reward(self, test_stdout: str = "", test_stderr: str = "") -> EvaluationResult:
+    def _read_reward(
+        self, test_stdout: str = "", test_stderr: str = ""
+    ) -> EvaluationResult:
         """Read the reward from /logs/verifier/reward.txt or reward.json."""
         for path, is_json in [
             ("/logs/verifier/reward.json", True),
@@ -261,7 +269,9 @@ class HarborEvaluator(ContainerizedEvaluator):
             return path
 
         # Tier 3: default.
-        logger.warning(f"Could not extract solution path, using default: {_DEFAULT_SOLUTION_PATH}")
+        logger.warning(
+            f"Could not extract solution path, using default: {_DEFAULT_SOLUTION_PATH}"
+        )
         return _DEFAULT_SOLUTION_PATH
 
     def _extract_path_from_solve_sh(self) -> str:
@@ -307,7 +317,9 @@ class HarborEvaluator(ContainerizedEvaluator):
             candidates = re.findall(r'cd\s+"?(/[^"$\s]+)"?\s*$', text, re.MULTILINE)
             if not candidates:
                 # Variable assignments like RBENCH_DIR="/workspace/rbench_reference"
-                candidates = re.findall(r'[A-Z_]+=\s*"?(/[^"$\s]+)"?\s*$', text, re.MULTILINE)
+                candidates = re.findall(
+                    r'[A-Z_]+=\s*"?(/[^"$\s]+)"?\s*$', text, re.MULTILINE
+                )
 
             if candidates:
                 base = candidates[0].rstrip('"')

@@ -43,7 +43,9 @@ def check_inside_triangle_wtol(points: np.ndarray, tol: float = 1e-6):
 
 
 def triangle_area(a: np.array, b: np.array, c: np.array) -> float:
-    return np.abs(a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])) / 2
+    return (
+        np.abs(a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])) / 2
+    )
 
 
 def evaluate(program_path: str):
@@ -71,7 +73,9 @@ def evaluate(program_path: str):
             points = np.array(points)
 
         if points.shape != (NUM_POINTS, 2):
-            raise ValueError(f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS,2)}")
+            raise ValueError(
+                f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS, 2)}"
+            )
 
         check_inside_triangle_wtol(points, TOL)
 
@@ -79,7 +83,10 @@ def evaluate(program_path: str):
         b = np.array([1, 0])
         c = np.array([0.5, np.sqrt(3) / 2])
         min_triangle_area = min(
-            [triangle_area(p1, p2, p3) for p1, p2, p3 in itertools.combinations(points, 3)]
+            [
+                triangle_area(p1, p2, p3)
+                for p1, p2, p3 in itertools.combinations(points, 3)
+            ]
         )
         min_area_normalized = min_triangle_area / triangle_area(a, b, c)
 

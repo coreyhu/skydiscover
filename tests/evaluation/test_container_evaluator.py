@@ -22,12 +22,14 @@ def parse_output():
 
 class TestParseOutputSuccess:
     def test_full_valid_response(self, parse_output):
-        stdout = json.dumps({
-            "status": "success",
-            "combined_score": 0.85,
-            "metrics": {"combined_score": 0.85, "accuracy": 0.9, "speed": 0.8},
-            "artifacts": {"feedback": "good job"},
-        })
+        stdout = json.dumps(
+            {
+                "status": "success",
+                "combined_score": 0.85,
+                "metrics": {"combined_score": 0.85, "accuracy": 0.9, "speed": 0.8},
+                "artifacts": {"feedback": "good job"},
+            }
+        )
         result = parse_output(stdout)
         assert result.metrics["combined_score"] == 0.85
         assert result.metrics["accuracy"] == 0.9
@@ -36,45 +38,56 @@ class TestParseOutputSuccess:
         assert "status" not in result.artifacts
 
     def test_combined_score_promoted_to_metrics(self, parse_output):
-        stdout = json.dumps({
-            "status": "success",
-            "combined_score": 0.5,
-            "metrics": {"accuracy": 0.5},
-        })
+        stdout = json.dumps(
+            {
+                "status": "success",
+                "combined_score": 0.5,
+                "metrics": {"accuracy": 0.5},
+            }
+        )
         result = parse_output(stdout)
         assert result.metrics["combined_score"] == 0.5
         assert result.metrics["accuracy"] == 0.5
 
     def test_no_artifacts(self, parse_output):
-        stdout = json.dumps({
-            "status": "success",
-            "combined_score": 1.0,
-            "metrics": {"combined_score": 1.0},
-        })
+        stdout = json.dumps(
+            {
+                "status": "success",
+                "combined_score": 1.0,
+                "metrics": {"combined_score": 1.0},
+            }
+        )
         assert parse_output(stdout).artifacts == {}
 
     def test_integer_metrics_converted_to_float(self, parse_output):
-        stdout = json.dumps({
-            "status": "success",
-            "combined_score": 1,
-            "metrics": {"n_correct": 5, "n_total": 5},
-        })
+        stdout = json.dumps(
+            {
+                "status": "success",
+                "combined_score": 1,
+                "metrics": {"n_correct": 5, "n_total": 5},
+            }
+        )
         result = parse_output(stdout)
         assert result.metrics["n_correct"] == 5.0
         assert isinstance(result.metrics["n_correct"], float)
 
     def test_non_numeric_metrics_filtered(self, parse_output):
-        stdout = json.dumps({
-            "status": "success",
-            "combined_score": 0.5,
-            "metrics": {"combined_score": 0.5, "label": "fast", "count": 3},
-        })
+        stdout = json.dumps(
+            {
+                "status": "success",
+                "combined_score": 0.5,
+                "metrics": {"combined_score": 0.5, "label": "fast", "count": 3},
+            }
+        )
         result = parse_output(stdout)
         assert "label" not in result.metrics
         assert result.metrics["count"] == 3.0
 
     def test_trailing_whitespace_stripped(self, parse_output):
-        stdout = json.dumps({"status": "success", "combined_score": 0.7, "metrics": {}}) + "\n\n"
+        stdout = (
+            json.dumps({"status": "success", "combined_score": 0.7, "metrics": {}})
+            + "\n\n"
+        )
         assert parse_output(stdout).metrics["combined_score"] == 0.7
 
 
@@ -95,12 +108,14 @@ class TestParseOutputErrors:
         assert "raw_output" in result.artifacts
 
     def test_error_status_surfaces_in_artifacts(self, parse_output):
-        stdout = json.dumps({
-            "status": "error",
-            "combined_score": 0.0,
-            "metrics": {"combined_score": 0.0},
-            "artifacts": {"error": "segfault"},
-        })
+        stdout = json.dumps(
+            {
+                "status": "error",
+                "combined_score": 0.0,
+                "metrics": {"combined_score": 0.0},
+                "artifacts": {"error": "segfault"},
+            }
+        )
         result = parse_output(stdout)
         assert result.metrics["combined_score"] == 0.0
         assert result.artifacts["status"] == "error"
@@ -136,8 +151,14 @@ class TestParseOutputErrors:
 class TestLlmJudgeAttribute:
     def test_init_sets_llm_judge_to_none(self):
         """ContainerizedEvaluator.__init__ must set self.llm_judge before Docker calls."""
-        with patch.object(ContainerizedEvaluator, "_build_image", return_value="fake:latest"), \
-             patch.object(ContainerizedEvaluator, "_start_container", return_value="abc123"):
+        with (
+            patch.object(
+                ContainerizedEvaluator, "_build_image", return_value="fake:latest"
+            ),
+            patch.object(
+                ContainerizedEvaluator, "_start_container", return_value="abc123"
+            ),
+        ):
             from skydiscover.config import EvaluatorConfig
 
             inst = ContainerizedEvaluator.__new__(ContainerizedEvaluator)

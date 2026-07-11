@@ -23,7 +23,10 @@ from skydiscover.evaluation.llm_judge import LLMJudge
 from skydiscover.llm.base import LLMResponse
 from skydiscover.llm.llm_pool import LLMPool
 from skydiscover.search.base_database import Program, ProgramDatabase
-from skydiscover.search.utils.discovery_utils import SerializableResult, build_image_content
+from skydiscover.search.utils.discovery_utils import (
+    SerializableResult,
+    build_image_content,
+)
 from skydiscover.utils.code_utils import (
     apply_diff,
     extract_diffs,
@@ -97,7 +100,9 @@ class DiscoveryController:
             from skydiscover.llm.agentic_generator import AgenticGenerator
 
             self.agentic_generator = AgenticGenerator(self.llms, self.config.agentic)
-            logger.info(f"Agentic mode enabled (codebase: {self.config.agentic.codebase_root})")
+            logger.info(
+                f"Agentic mode enabled (codebase: {self.config.agentic.codebase_root})"
+            )
 
         self.num_context_programs = controller_input.config.search.num_context_programs
 
@@ -158,7 +163,9 @@ class DiscoveryController:
         else:
             self.context_builder = DefaultContextBuilder(self.config)
 
-    async def _call_llm(self, system_message: str, user_message: str, **kwargs) -> LLMResponse:
+    async def _call_llm(
+        self, system_message: str, user_message: str, **kwargs
+    ) -> LLMResponse:
         """Call the LLM, using agentic mode if enabled (text-only)."""
         if self.agentic_generator and not kwargs.get("image_output"):
             text = await self.agentic_generator.generate(system_message, user_message)
@@ -251,7 +258,9 @@ class DiscoveryController:
                     continue
 
                 if post_process_result:
-                    self._process_iteration_result(result, iteration, checkpoint_callback)
+                    self._process_iteration_result(
+                        result, iteration, checkpoint_callback
+                    )
 
             except Exception as e:
                 logger.exception(f"Error in iteration {iteration}: {e}")
@@ -284,7 +293,9 @@ class DiscoveryController:
             f"({start_iteration}..{total_iterations - 1})"
         )
 
-        async def _bounded_iteration(iteration: int) -> Tuple[int, Optional[SerializableResult]]:
+        async def _bounded_iteration(
+            iteration: int,
+        ) -> Tuple[int, Optional[SerializableResult]]:
             """Run one iteration under the semaphore, then process its result.
 
             Result processing (database.add) happens here rather than being
@@ -295,7 +306,9 @@ class DiscoveryController:
                 if self.shutdown_event.is_set():
                     return iteration, None
                 try:
-                    result = await self._run_iteration(iteration, retry_times=retry_times)
+                    result = await self._run_iteration(
+                        iteration, retry_times=retry_times
+                    )
                 except Exception as e:
                     logger.exception(f"Error in parallel iteration {iteration}: {e}")
                     return iteration, None
@@ -313,7 +326,9 @@ class DiscoveryController:
             if self.shutdown_event.is_set():
                 break
 
-            task = asyncio.create_task(_bounded_iteration(iteration), name=f"iter_{iteration}")
+            task = asyncio.create_task(
+                _bounded_iteration(iteration), name=f"iter_{iteration}"
+            )
             pending.add(task)
             task.add_done_callback(pending.discard)
 
@@ -392,7 +407,9 @@ class DiscoveryController:
             llm_generation_time = time.time() - llm_start
             llm_response = result.text
             if not llm_response:
-                return SerializableResult(error="Empty LLM response", iteration=iteration)
+                return SerializableResult(
+                    error="Empty LLM response", iteration=iteration
+                )
 
             child_solution = parse_full_rewrite(llm_response, self.config.language)
             if not child_solution:
@@ -405,7 +422,9 @@ class DiscoveryController:
 
             child_id = str(uuid.uuid4())
             eval_start = time.time()
-            eval_result = await self.evaluator.evaluate_program(child_solution, child_id)
+            eval_result = await self.evaluator.evaluate_program(
+                child_solution, child_id
+            )
             eval_time = time.time() - eval_start
 
             child = Program(
@@ -468,7 +487,9 @@ class DiscoveryController:
 
             parent_info = (parent_info_key, parent.id)
             context_info = [
-                (key, p.id) for key, programs in context_programs_dict.items() for p in programs
+                (key, p.id)
+                for key, programs in context_programs_dict.items()
+                for p in programs
             ]
             context_program_ids = [
                 p.id for programs in context_programs_dict.values() for p in programs
@@ -562,11 +583,20 @@ class DiscoveryController:
                             attempts_used=retry + 1,
                         )
 
-                    child_solution, changes_summary, parse_error = self._parse_llm_response(
-                        llm_response, parent.solution, iteration, retry + 1, retry_times
+                    child_solution, changes_summary, parse_error = (
+                        self._parse_llm_response(
+                            llm_response,
+                            parent.solution,
+                            iteration,
+                            retry + 1,
+                            retry_times,
+                        )
                     )
 
-                    if child_solution and len(child_solution) > self.config.max_solution_length:
+                    if (
+                        child_solution
+                        and len(child_solution) > self.config.max_solution_length
+                    ):
                         logger.warning(
                             "Generated solution exceeds maximum length (iteration=%s, attempt %s/%s): %s > %s",
                             iteration,
@@ -608,9 +638,13 @@ class DiscoveryController:
                 if self.config.language != "image":
                     child_id = str(uuid.uuid4())
 
-                eval_input = image_path if self.config.language == "image" else child_solution
+                eval_input = (
+                    image_path if self.config.language == "image" else child_solution
+                )
                 eval_start = time.time()
-                child_eval_result = await self.evaluator.evaluate_program(eval_input, child_id)
+                child_eval_result = await self.evaluator.evaluate_program(
+                    eval_input, child_id
+                )
                 eval_time = time.time() - eval_start
                 child_metrics = child_eval_result.metrics
                 # Extract image_path from evaluator metrics (non-image mode fallback)
@@ -630,7 +664,10 @@ class DiscoveryController:
                     )
                     or (
                         child_metrics.get("combined_score") == 0
-                        and (child_metrics.get("error") is not None or "error" in child_artifacts)
+                        and (
+                            child_metrics.get("error") is not None
+                            or "error" in child_artifacts
+                        )
                     )
                 ):
                     error_msg = (
@@ -674,7 +711,9 @@ class DiscoveryController:
                     if retry < retry_times - 1:
                         continue
                     logger.error(
-                        "All %s retry attempts failed. Final error: %s", retry_times, error_msg
+                        "All %s retry attempts failed. Final error: %s",
+                        retry_times,
+                        error_msg,
                     )
                     iteration_time = time.time() - iteration_start
                     failed_extra = {"failed_attempts": failed_attempts}
@@ -740,7 +779,9 @@ class DiscoveryController:
             )
         except Exception as e:
             logger.exception(f"Error in iteration {iteration}")
-            return SerializableResult(error=str(e), iteration=iteration, attempts_used=1)
+            return SerializableResult(
+                error=str(e), iteration=iteration, attempts_used=1
+            )
 
     # ------------------------------------------------------------------
     # Prompt / parsing / program creation helpers
@@ -758,7 +799,9 @@ class DiscoveryController:
             if isinstance(current_program, dict)
             else current_program
         )
-        db_stats = self._prompt_context.get("db_stats") or self.database.get_statistics()
+        db_stats = (
+            self._prompt_context.get("db_stats") or self.database.get_statistics()
+        )
 
         # Build context with parent program and any other relevant information
         context = {
@@ -774,7 +817,9 @@ class DiscoveryController:
         if failed_attempts:
             context["errors"] = failed_attempts
 
-        return self.context_builder.build_prompt(current_program=current_program, context=context)
+        return self.context_builder.build_prompt(
+            current_program=current_program, context=context
+        )
 
     def _parse_llm_response(
         self,
@@ -961,7 +1006,9 @@ class DiscoveryController:
 
         if iteration > 0 and iteration % self.config.checkpoint_interval == 0:
             if verbose:
-                logger.info(f"[CHECKPOINT] Checkpoint interval reached at iteration {iteration}")
+                logger.info(
+                    f"[CHECKPOINT] Checkpoint interval reached at iteration {iteration}"
+                )
 
             self.database.log_status()
             if checkpoint_callback:

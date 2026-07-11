@@ -57,7 +57,9 @@ def validate_packing(centers, radii):
         x, y = centers[i]
         r = radii[i]
         if x - r < -1e-6 or x + r > 1 + 1e-6 or y - r < -1e-6 or y + r > 1 + 1e-6:
-            print(f"Circle {i} at ({x}, {y}) with radius {r} is outside the unit square")
+            print(
+                f"Circle {i} at ({x}, {y}) with radius {r} is outside the unit square"
+            )
             return False
 
     # Check for overlaps
@@ -65,7 +67,9 @@ def validate_packing(centers, radii):
         for j in range(i + 1, n):
             dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))
             if dist < radii[i] + radii[j] - 1e-6:  # Allow for tiny numerical errors
-                print(f"Circles {i} and {j} overlap: dist={dist}, r1+r2={radii[i]+radii[j]}")
+                print(
+                    f"Circles {i} and {j} overlap: dist={dist}, r1+r2={radii[i] + radii[j]}"
+                )
                 return False
 
     return True
@@ -138,7 +142,9 @@ except Exception as e:
     try:
         # Run the script with timeout
         process = subprocess.Popen(
-            [sys.executable, temp_file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            [sys.executable, temp_file_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         try:
@@ -201,7 +207,8 @@ def evaluate(program_path):
 
         # Use subprocess to run with timeout
         centers, radii, reported_sum = run_with_timeout(
-            program_path, timeout_seconds=600  # Single timeout
+            program_path,
+            timeout_seconds=600,  # Single timeout
         )
 
         end_time = time.time()
@@ -240,7 +247,9 @@ def evaluate(program_path):
 
         # Make sure reported_sum matches the calculated sum
         if abs(sum_radii - reported_sum) > 1e-6:
-            print(f"Warning: Reported sum {reported_sum} doesn't match calculated sum {sum_radii}")
+            print(
+                f"Warning: Reported sum {reported_sum} doesn't match calculated sum {sum_radii}"
+            )
 
         # Target ratio (how close we are to the target)
         target_ratio = sum_radii / TARGET_VALUE if valid else 0.0
@@ -283,7 +292,9 @@ def evaluate_stage1(program_path):
     try:
         # Use the simplified subprocess approach
         try:
-            centers, radii, sum_radii = run_with_timeout(program_path, timeout_seconds=600)
+            centers, radii, sum_radii = run_with_timeout(
+                program_path, timeout_seconds=600
+            )
 
             # Ensure centers and radii are numpy arrays
             if not isinstance(centers, np.ndarray):

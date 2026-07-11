@@ -64,7 +64,9 @@ class KernelBenchResolver(BenchmarkResolver):
         num_correct_trials = config.get("num_correct_trials", 5)
         num_perf_trials = config.get("num_perf_trials", 100)
 
-        logger.info(f"Resolving KernelBench problem: level={level}, problem_id={problem_id}")
+        logger.info(
+            f"Resolving KernelBench problem: level={level}, problem_id={problem_id}"
+        )
         logger.info(f"Eval mode: {eval_mode}, GPU: {gpu}")
 
         # Import KernelBench dataset utilities

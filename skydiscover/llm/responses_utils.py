@@ -65,7 +65,9 @@ def convert_messages_to_responses_input(messages: List[Dict[str, Any]]) -> list:
                     parts.append({"type": "input_text", "text": part["text"]})
                 elif ptype == "image_url":
                     url = part.get("image_url", {}).get("url", "")
-                    parts.append({"type": "input_image", "image_url": url, "detail": "auto"})
+                    parts.append(
+                        {"type": "input_image", "image_url": url, "detail": "auto"}
+                    )
             items.append({"type": "message", "role": role, "content": parts})
 
     return items

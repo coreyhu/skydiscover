@@ -53,14 +53,16 @@ def evaluate(program_path: str):
 
         if points.shape != (NUM_POINTS, DIMENSION):
             raise ValueError(
-                f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS,DIMENSION)}"
+                f"Invalid shapes: points = {points.shape}, expected {(NUM_POINTS, DIMENSION)}"
             )
 
         pairwise_distances = sp.spatial.distance.pdist(points)
         min_distance = np.min(pairwise_distances)
         max_distance = np.max(pairwise_distances)
 
-        inv_ratio_squared = (min_distance / max_distance) ** 2 if max_distance > 0 else 0
+        inv_ratio_squared = (
+            (min_distance / max_distance) ** 2 if max_distance > 0 else 0
+        )
         return {
             "min_max_ratio": float(inv_ratio_squared),
             "combined_score": float(inv_ratio_squared / BENCHMARK),

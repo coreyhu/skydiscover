@@ -104,9 +104,13 @@ class ContainerizedEvaluator:
             except subprocess.TimeoutExpired:
                 logger.warning(f"Timed out stopping container {cid[:12]}, killing...")
                 try:
-                    subprocess.run(["docker", "kill", cid], capture_output=True, timeout=10)
+                    subprocess.run(
+                        ["docker", "kill", cid], capture_output=True, timeout=10
+                    )
                 except Exception:
-                    logger.warning(f"Failed to kill container {cid[:12]}", exc_info=True)
+                    logger.warning(
+                        f"Failed to kill container {cid[:12]}", exc_info=True
+                    )
             except Exception:
                 logger.warning(f"Failed to stop container {cid[:12]}", exc_info=True)
             finally:
@@ -212,7 +216,9 @@ class ContainerizedEvaluator:
         finally:
             self._remove_file(candidate_path)
 
-    def _run_single_in_container(self, candidate_path: str, mode: str) -> EvaluationResult:
+    def _run_single_in_container(
+        self, candidate_path: str, mode: str
+    ) -> EvaluationResult:
         """Execute evaluate.sh inside the container and parse its JSON output."""
         try:
             # Build docker exec command with environment variables
@@ -238,10 +244,14 @@ class ContainerizedEvaluator:
             logger.error(f"docker exec timed out after {self.config.timeout}s")
             return EvaluationResult(
                 metrics={"error": 0.0, "timeout": True},
-                artifacts={"error": f"docker exec timed out after {self.config.timeout}s"},
+                artifacts={
+                    "error": f"docker exec timed out after {self.config.timeout}s"
+                },
             )
         if proc.returncode != 0:
-            logger.error(f"Evaluator exited with code {proc.returncode}:\n{proc.stderr}")
+            logger.error(
+                f"Evaluator exited with code {proc.returncode}:\n{proc.stderr}"
+            )
             return EvaluationResult(
                 metrics={"error": 0.0},
                 artifacts={"stderr": proc.stderr, "exit_code": str(proc.returncode)},
@@ -268,7 +278,9 @@ class ContainerizedEvaluator:
             capture_output=True,
         )
         if inject.returncode != 0:
-            raise RuntimeError(f"Failed to inject file into container: {inject.stderr.decode()}")
+            raise RuntimeError(
+                f"Failed to inject file into container: {inject.stderr.decode()}"
+            )
         return path
 
     def _remove_file(self, path: str) -> None:
@@ -291,7 +303,9 @@ class ContainerizedEvaluator:
         status = data.get("status", "error")
         combined_score = float(data.get("combined_score", 0.0))
         metrics = {
-            k: float(v) for k, v in data.get("metrics", {}).items() if isinstance(v, (int, float))
+            k: float(v)
+            for k, v in data.get("metrics", {}).items()
+            if isinstance(v, (int, float))
         }
         if "combined_score" not in metrics:
             metrics["combined_score"] = combined_score
@@ -335,5 +349,7 @@ class ContainerizedEvaluator:
             text=True,
         )
         if result.returncode != 0:
-            raise RuntimeError(f"Docker build failed for {self.benchmark_dir}:\n{result.stderr}")
+            raise RuntimeError(
+                f"Docker build failed for {self.benchmark_dir}:\n{result.stderr}"
+            )
         return tag

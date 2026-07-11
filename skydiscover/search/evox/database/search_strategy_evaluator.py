@@ -35,7 +35,9 @@ def _verify_metrics_preserved(
         original_value = original_metrics[key]
         stored_value = stored_metrics[key]
 
-        if isinstance(original_value, (int, float)) and isinstance(stored_value, (int, float)):
+        if isinstance(original_value, (int, float)) and isinstance(
+            stored_value, (int, float)
+        ):
             if abs(float(original_value) - float(stored_value)) > 1e-10:
                 return (
                     f"Metric '{key}' value was modified in program '{program_id}' during {operation}: "
@@ -88,7 +90,9 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                 )
 
             if not issubclass(database_class, ProgramDatabase):
-                return _error_response("EvolvedProgramDatabase must inherit from ProgramDatabase")
+                return _error_response(
+                    "EvolvedProgramDatabase must inherit from ProgramDatabase"
+                )
 
             if not issubclass(program_class, Program):
                 return _error_response(
@@ -110,14 +114,18 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                 if hasattr(typing, "get_args") and hasattr(typing, "get_origin"):
                     origin = typing.get_origin(return_annotation)
                     args = typing.get_args(return_annotation)
-                    if origin is tuple or (hasattr(typing, "Tuple") and origin is typing.Tuple):
+                    if origin is tuple or (
+                        hasattr(typing, "Tuple") and origin is typing.Tuple
+                    ):
                         if len(args) != 2:
                             return _error_response(
                                 f"sample() return type must be Tuple[Dict[str, Program], Dict[str, List[Program]]] "
                                 f"(2 elements), got {return_annotation} with {len(args)} elements"
                             )
         except Exception as e:
-            return _error_response(f"Failed structural checks for EvolvedProgramDatabase: {str(e)}")
+            return _error_response(
+                f"Failed structural checks for EvolvedProgramDatabase: {str(e)}"
+            )
 
         # Ensure DIVERGE_LABEL and REFINE_LABEL exist for evolved databases that use them in __init__
         # (coevolve_controller assigns real values via _assign_labels_to_db; evaluator uses empty defaults)
@@ -163,7 +171,10 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                 return _error_response(error_msg)
 
             error_msg = _verify_metrics_preserved(
-                original_metrics, test_program.metrics, "add() (original object)", "test_program_1"
+                original_metrics,
+                test_program.metrics,
+                "add() (original object)",
+                "test_program_1",
             )
             if error_msg:
                 return _error_response(error_msg)
@@ -177,7 +188,10 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                     id=f"program_{i}",
                     solution=f"def func_{i}(): return {i}",
                     language="python",
-                    metrics={"score": float(i) / 10.0, "combined_score": float(i) / 10.0},
+                    metrics={
+                        "score": float(i) / 10.0,
+                        "combined_score": float(i) / 10.0,
+                    },
                 )
                 program.iteration_found = i
                 original_metrics = program.metrics.copy()
@@ -242,7 +256,9 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                         f"sample() parent_dict value must be a Program, got {type(parent)} on iteration {sample_iter}"
                     )
                 if parent.id not in db.programs:
-                    return _error_response(f"Sampled parent (id={parent.id}) not found in database")
+                    return _error_response(
+                        f"Sampled parent (id={parent.id}) not found in database"
+                    )
 
                 if not isinstance(context_programs_dict, dict):
                     return _error_response(
@@ -286,7 +302,10 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
                     )
 
                 error_msg = _verify_metrics_preserved(
-                    original_parent_metrics, parent.metrics, "sample() (parent returned)", parent.id
+                    original_parent_metrics,
+                    parent.metrics,
+                    "sample() (parent returned)",
+                    parent.id,
                 )
                 if error_msg:
                     return _error_response(error_msg)
@@ -359,10 +378,15 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
 
             stored_error_program = db.get("error_program")
             if stored_error_program is None:
-                return _error_response("Program with error string in metrics not found after add()")
+                return _error_response(
+                    "Program with error string in metrics not found after add()"
+                )
 
             error_msg = _verify_metrics_preserved(
-                original_error_metrics, stored_error_program.metrics, "add()", "error_program"
+                original_error_metrics,
+                stored_error_program.metrics,
+                "add()",
+                "error_program",
             )
             if error_msg:
                 return _error_response(error_msg)
@@ -521,10 +545,15 @@ def evaluate(program_path: str, fast_mode: bool = False) -> Dict[str, Any]:
 
             stored_metrics_program = db.get("metrics_test_program")
             if stored_metrics_program is None:
-                return _error_response("Metrics test program not found in database after add()")
+                return _error_response(
+                    "Metrics test program not found in database after add()"
+                )
 
             error_msg = _verify_metrics_preserved(
-                original_metrics, stored_metrics_program.metrics, "add()", "metrics_test_program"
+                original_metrics,
+                stored_metrics_program.metrics,
+                "add()",
+                "metrics_test_program",
             )
             if error_msg:
                 return _error_response(error_msg)
@@ -718,15 +747,21 @@ def evaluate_batch(
             return path, _error_response(f"Evaluation failed: {str(e)}")
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_path = {executor.submit(eval_with_timeout, path): path for path in program_paths}
+        future_to_path = {
+            executor.submit(eval_with_timeout, path): path for path in program_paths
+        }
 
-        for future in as_completed(future_to_path, timeout=timeout_per_file * len(program_paths)):
+        for future in as_completed(
+            future_to_path, timeout=timeout_per_file * len(program_paths)
+        ):
             try:
                 path, result = future.result(timeout=timeout_per_file)
                 results[path] = result
             except Exception as e:
                 path = future_to_path[future]
-                results[path] = _error_response(f"Evaluation timed out or failed: {str(e)}")
+                results[path] = _error_response(
+                    f"Evaluation timed out or failed: {str(e)}"
+                )
 
     return results
 
@@ -767,7 +802,9 @@ if __name__ == "__main__":
         import time
 
         start = time.time()
-        results = evaluate_batch(program_paths, fast_mode=fast_mode, max_workers=max_workers)
+        results = evaluate_batch(
+            program_paths, fast_mode=fast_mode, max_workers=max_workers
+        )
         elapsed = time.time() - start
 
         valid_count = sum(1 for r in results.values() if r.get("validity") == 1)

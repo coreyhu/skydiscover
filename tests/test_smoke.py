@@ -102,7 +102,11 @@ class TestSmokePipeline:
                 "evaluator": {"evaluation_file": str(evaluator_file)},
                 "llm": {
                     "models": [
-                        {"name": "fake-model", "api_key": "fake", "api_base": "http://localhost:1"}
+                        {
+                            "name": "fake-model",
+                            "api_key": "fake",
+                            "api_base": "http://localhost:1",
+                        }
                     ],
                 },
             }
@@ -152,7 +156,9 @@ class TestBugFixGuards:
     def test_evaluator_unique_module_names(self, tmp_path):
         """Two Evaluator instances for the same file must get distinct _module_name values."""
         eval_file = tmp_path / "eval.py"
-        eval_file.write_text("def evaluate(program_path):\n    return {'combined_score': 1.0}\n")
+        eval_file.write_text(
+            "def evaluate(program_path):\n    return {'combined_score': 1.0}\n"
+        )
 
         cfg = EvaluatorConfig(evaluation_file=str(eval_file))
         ev1 = Evaluator(config=cfg)

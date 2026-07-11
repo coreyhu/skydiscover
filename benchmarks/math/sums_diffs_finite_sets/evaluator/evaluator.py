@@ -48,7 +48,9 @@ def verify_c6_solution(u_set: np.ndarray, c6_achieved: float):
 
     # Check for consistency
     if not np.isclose(computed_c6, c6_achieved):
-        raise ValueError(f"C6 mismatch: reported {c6_achieved:.6f}, computed {computed_c6:.6f}")
+        raise ValueError(
+            f"C6 mismatch: reported {c6_achieved:.6f}, computed {computed_c6:.6f}"
+        )
 
     print(f"C6 lower bound achieved: {c6_achieved:.6f}")
     print(f"Known best bound (AlphaEvolve): {BENCHMARK}")

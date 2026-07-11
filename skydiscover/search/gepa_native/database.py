@@ -61,9 +61,15 @@ class GEPANativeDatabase(ProgramDatabase):
         seed: int = getattr(config, "random_seed", 42) or 42
 
         self.elite_pool: List[str] = []  # program IDs sorted by score desc
-        self.rejection_history: collections.deque = collections.deque(maxlen=max_rejection_history)
-        self.metric_best: Dict[str, Tuple[str, float]] = {}  # metric -> (prog_id, value)
-        self.program_at_metric_front: Dict[str, Set[str]] = {}  # metric -> set of prog_ids at best
+        self.rejection_history: collections.deque = collections.deque(
+            maxlen=max_rejection_history
+        )
+        self.metric_best: Dict[
+            str, Tuple[str, float]
+        ] = {}  # metric -> (prog_id, value)
+        self.program_at_metric_front: Dict[
+            str, Set[str]
+        ] = {}  # metric -> set of prog_ids at best
         self.rng = random.Random(seed)
 
         super().__init__(name, config, **kwargs)
@@ -72,7 +78,9 @@ class GEPANativeDatabase(ProgramDatabase):
     # Core interface
     # ------------------------------------------------------------------
 
-    def add(self, program: Program, iteration: Optional[int] = None, **kwargs: Any) -> str:
+    def add(
+        self, program: Program, iteration: Optional[int] = None, **kwargs: Any
+    ) -> str:
         """Add a program to the database and elite pool.
 
         Inserts into the elite pool (sorted descending by fitness), evicts
@@ -98,7 +106,9 @@ class GEPANativeDatabase(ProgramDatabase):
         if program.id not in self.elite_pool:
             self.elite_pool.append(program.id)
         self.elite_pool.sort(
-            key=lambda pid: get_score(self.programs[pid].metrics if pid in self.programs else {}),
+            key=lambda pid: get_score(
+                self.programs[pid].metrics if pid in self.programs else {}
+            ),
             reverse=True,
         )
 
@@ -106,7 +116,9 @@ class GEPANativeDatabase(ProgramDatabase):
         # Only remove from elite_pool (sampling); keep self.programs as
         # a full archive so parent lookups for reflective prompting work.
         if len(self.elite_pool) > self.population_size:
-            pinned = {self.best_program_id, self.initial_program_id, program.id} - {None}
+            pinned = {self.best_program_id, self.initial_program_id, program.id} - {
+                None
+            }
             keep = []
             for pid in self.elite_pool:
                 if pid in pinned or len(keep) < self.population_size:
@@ -133,7 +145,8 @@ class GEPANativeDatabase(ProgramDatabase):
             self._save_program(program)
 
         logger.debug(
-            f"Added program {program.id} to GEPA elite pool " f"(pool size: {len(self.elite_pool)})"
+            f"Added program {program.id} to GEPA elite pool "
+            f"(pool size: {len(self.elite_pool)})"
         )
         return program.id
 
@@ -254,7 +267,9 @@ class GEPANativeDatabase(ProgramDatabase):
             metadata = json.load(f)
 
         # Restore elite pool (filter out IDs no longer in programs)
-        self.elite_pool = [pid for pid in metadata.get("elite_pool", []) if pid in self.programs]
+        self.elite_pool = [
+            pid for pid in metadata.get("elite_pool", []) if pid in self.programs
+        ]
 
         # Restore initial program
         self.initial_program_id = metadata.get("initial_program_id")

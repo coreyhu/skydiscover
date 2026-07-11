@@ -19,4 +19,4 @@ def circle_packing21() -> np.ndarray:
 
 if __name__ == "__main__":
     circles = circle_packing21()
-    print(f"Radii sum: {np.sum(circles[:,-1])}")
+    print(f"Radii sum: {np.sum(circles[:, -1])}")

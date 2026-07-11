@@ -27,7 +27,11 @@ from typing import Any, Dict, List, Optional, Union
 
 from skydiscover.config import Config
 from skydiscover.context_builder.base import ContextBuilder
-from skydiscover.context_builder.utils import TemplateManager, format_artifacts, prog_attr
+from skydiscover.context_builder.utils import (
+    TemplateManager,
+    format_artifacts,
+    prog_attr,
+)
 from skydiscover.search.base_database import Program
 
 logger = logging.getLogger(__name__)
@@ -49,7 +53,9 @@ class DefaultContextBuilder(ContextBuilder):
         super().__init__(config)
         self.system_template_override = None
         self.user_template_override = None
-        self.template_manager = TemplateManager(_TEMPLATES_DIR, self.context_config.template_dir)
+        self.template_manager = TemplateManager(
+            _TEMPLATES_DIR, self.context_config.template_dir
+        )
 
     def set_templates(
         self, system_template: Optional[str] = None, user_template: Optional[str] = None
@@ -100,7 +106,9 @@ class DefaultContextBuilder(ContextBuilder):
         other_context_section = self._format_other_context_programs(
             other_context_programs, language
         )
-        current_program_section = self._format_current_program(current_program, language)
+        current_program_section = self._format_current_program(
+            current_program, language
+        )
         has_current_program = bool(current_program_section)
 
         if isinstance(current_program, dict) and current_program:
@@ -114,7 +122,9 @@ class DefaultContextBuilder(ContextBuilder):
         )
 
         if context.get("errors"):
-            other_context_section += self._format_failed_attempts(context["errors"], language)
+            other_context_section += self._format_failed_attempts(
+                context["errors"], language
+            )
 
         evaluator_timeout = getattr(self.config.evaluator, "timeout", None)
         timeout_warning = (
@@ -263,7 +273,9 @@ class DefaultContextBuilder(ContextBuilder):
                     f"Combined score declined: {prev_score:.4f} → {current_score:.4f}. Consider revising recent changes."
                 )
             elif abs(current_score - prev_score) < 1e-6:
-                improvement_areas.append(f"Combined score unchanged at {current_score:.4f}")
+                improvement_areas.append(
+                    f"Combined score unchanged at {current_score:.4f}"
+                )
 
         threshold = self.context_config.suggest_simplification_after_chars
         if threshold and len(current_program) > threshold:
@@ -356,7 +368,9 @@ class DefaultContextBuilder(ContextBuilder):
             if "SEARCH" in err_msg and llm_response:
                 if len(llm_response) > 1500:
                     llm_response = llm_response[:1500] + "\n... (truncated)"
-                lines.append(f"**Your response that failed:**\n```\n{llm_response}\n```\n\n")
+                lines.append(
+                    f"**Your response that failed:**\n```\n{llm_response}\n```\n\n"
+                )
             elif failed_solution:
                 if len(failed_solution) > 1500:
                     failed_solution = failed_solution[:1500] + "\n... (truncated)"
@@ -381,7 +395,9 @@ class DefaultContextBuilder(ContextBuilder):
             return "No previous attempts yet."
 
         try:
-            previous_attempt_template = self.template_manager.get_template("previous_attempt")
+            previous_attempt_template = self.template_manager.get_template(
+                "previous_attempt"
+            )
         except (ValueError, KeyError):
             previous_attempt_template = "### Attempt {attempt_number}\n- Changes: {changes}\n- Metrics: {performance}\n- Outcome: {outcome}"
 
@@ -390,7 +406,9 @@ class DefaultContextBuilder(ContextBuilder):
             key=lambda p: prog_attr(p, "metrics", {}).get("combined_score", 0.0),
             reverse=True,
         )
-        selected = previous_programs[: min(num_previous_attempts, len(previous_programs))]
+        selected = previous_programs[
+            : min(num_previous_attempts, len(previous_programs))
+        ]
 
         lines = []
         for i, program in enumerate(reversed(selected)):
@@ -408,7 +426,9 @@ class DefaultContextBuilder(ContextBuilder):
                         performance_parts.append(f"{name}: {value}")
                 else:
                     performance_parts.append(f"{name}: {value}")
-            performance_str = ", ".join(performance_parts) if performance_parts else "No metrics"
+            performance_str = (
+                ", ".join(performance_parts) if performance_parts else "No metrics"
+            )
 
             parent_metrics = metadata.get("parent_metrics", {})
             outcome = self._determine_outcome(metrics, parent_metrics)
@@ -426,11 +446,15 @@ class DefaultContextBuilder(ContextBuilder):
         return "".join(lines)
 
     @staticmethod
-    def _determine_outcome(program_metrics: Dict[str, Any], parent_metrics: Dict[str, Any]) -> str:
+    def _determine_outcome(
+        program_metrics: Dict[str, Any], parent_metrics: Dict[str, Any]
+    ) -> str:
         """Compare combined_score to parent: 'Improvement', 'Regression', or 'No change'."""
         prog_value = program_metrics.get("combined_score")
         parent_value = parent_metrics.get("combined_score", 0)
-        if isinstance(prog_value, (int, float)) and isinstance(parent_value, (int, float)):
+        if isinstance(prog_value, (int, float)) and isinstance(
+            parent_value, (int, float)
+        ):
             if prog_value > parent_value:
                 return "Improvement in combined_score"
             elif prog_value < parent_value:

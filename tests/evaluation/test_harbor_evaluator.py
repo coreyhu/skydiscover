@@ -8,7 +8,10 @@ import pytest
 
 from skydiscover.config import EvaluatorConfig
 from skydiscover.evaluation import _is_harbor_task, _is_containerized
-from skydiscover.evaluation.harbor_evaluator import HarborEvaluator, _DEFAULT_SOLUTION_PATH
+from skydiscover.evaluation.harbor_evaluator import (
+    HarborEvaluator,
+    _DEFAULT_SOLUTION_PATH,
+)
 
 
 def _make_evaluator(task_dir: str) -> HarborEvaluator:
@@ -72,19 +75,27 @@ class TestExtractPathFromSolveSh:
         return _make_evaluator(str(tmp_path))
 
     def test_absolute_cat_redirect(self, tmp_path):
-        inst = self._write_solve_sh(tmp_path, "cat > /app/solver.py << 'EOF'\nprint('hi')\nEOF\n")
+        inst = self._write_solve_sh(
+            tmp_path, "cat > /app/solver.py << 'EOF'\nprint('hi')\nEOF\n"
+        )
         assert inst._extract_path_from_solve_sh() == "/app/solver.py"
 
     def test_bare_redirect(self, tmp_path):
-        inst = self._write_solve_sh(tmp_path, "> /workspace/solution.py << 'EOF'\ncode\nEOF\n")
+        inst = self._write_solve_sh(
+            tmp_path, "> /workspace/solution.py << 'EOF'\ncode\nEOF\n"
+        )
         assert inst._extract_path_from_solve_sh() == "/workspace/solution.py"
 
     def test_rust_extension(self, tmp_path):
-        inst = self._write_solve_sh(tmp_path, "cat > /app/src/main.rs << 'EOF'\nfn main(){}\nEOF\n")
+        inst = self._write_solve_sh(
+            tmp_path, "cat > /app/src/main.rs << 'EOF'\nfn main(){}\nEOF\n"
+        )
         assert inst._extract_path_from_solve_sh() == "/app/src/main.rs"
 
     def test_cpp_extension(self, tmp_path):
-        inst = self._write_solve_sh(tmp_path, "cat > /solution/solve.cpp << 'EOF'\nint main(){}\nEOF\n")
+        inst = self._write_solve_sh(
+            tmp_path, "cat > /solution/solve.cpp << 'EOF'\nint main(){}\nEOF\n"
+        )
         assert inst._extract_path_from_solve_sh() == "/solution/solve.cpp"
 
     def test_relative_path_with_cd(self, tmp_path):
@@ -96,7 +107,10 @@ class TestExtractPathFromSolveSh:
             EOF
         """)
         inst = self._write_solve_sh(tmp_path, content)
-        assert inst._extract_path_from_solve_sh() == "/workspace/project/src/interfaces/base.rs"
+        assert (
+            inst._extract_path_from_solve_sh()
+            == "/workspace/project/src/interfaces/base.rs"
+        )
 
     def test_relative_path_with_variable_assignment(self, tmp_path):
         content = textwrap.dedent("""\
@@ -107,13 +121,20 @@ class TestExtractPathFromSolveSh:
             EOF
         """)
         inst = self._write_solve_sh(tmp_path, content)
-        assert inst._extract_path_from_solve_sh() == "/workspace/rbench_reference/src/main.py"
+        assert (
+            inst._extract_path_from_solve_sh()
+            == "/workspace/rbench_reference/src/main.py"
+        )
 
     def test_relative_path_with_dockerfile_workdir(self, tmp_path):
         (tmp_path / "solution").mkdir()
-        (tmp_path / "solution" / "solve.sh").write_text("cat > solver.py << 'EOF'\ncode\nEOF\n")
+        (tmp_path / "solution" / "solve.sh").write_text(
+            "cat > solver.py << 'EOF'\ncode\nEOF\n"
+        )
         (tmp_path / "environment").mkdir()
-        (tmp_path / "environment" / "Dockerfile").write_text("FROM python:3.11\nWORKDIR /opt/app\n")
+        (tmp_path / "environment" / "Dockerfile").write_text(
+            "FROM python:3.11\nWORKDIR /opt/app\n"
+        )
         inst = _make_evaluator(str(tmp_path))
         assert inst._extract_path_from_solve_sh() == "/opt/app/solver.py"
 
@@ -133,17 +154,23 @@ class TestExtractPathFromSolveSh:
 
 class TestExtractPathFromInstruction:
     def test_backtick_path(self, tmp_path):
-        (tmp_path / "instruction.md").write_text("Write your solution in `/app/solver.py`.\n")
+        (tmp_path / "instruction.md").write_text(
+            "Write your solution in `/app/solver.py`.\n"
+        )
         inst = _make_evaluator(str(tmp_path))
         assert inst._extract_path_from_instruction() == "/app/solver.py"
 
     def test_quoted_path(self, tmp_path):
-        (tmp_path / "instruction.md").write_text('Save your code to "/workspace/solve.py".\n')
+        (tmp_path / "instruction.md").write_text(
+            'Save your code to "/workspace/solve.py".\n'
+        )
         inst = _make_evaluator(str(tmp_path))
         assert inst._extract_path_from_instruction() == "/workspace/solve.py"
 
     def test_preposition_path(self, tmp_path):
-        (tmp_path / "instruction.md").write_text("Place your solution at /opt/solution.py and run it.\n")
+        (tmp_path / "instruction.md").write_text(
+            "Place your solution at /opt/solution.py and run it.\n"
+        )
         inst = _make_evaluator(str(tmp_path))
         assert inst._extract_path_from_instruction() == "/opt/solution.py"
 
@@ -165,7 +192,9 @@ class TestExtractPathFromInstruction:
 class TestExtractSolutionPath:
     def test_prefers_solve_sh_over_instruction(self, tmp_path):
         (tmp_path / "solution").mkdir()
-        (tmp_path / "solution" / "solve.sh").write_text("cat > /from/solve.py << 'EOF'\nEOF\n")
+        (tmp_path / "solution" / "solve.sh").write_text(
+            "cat > /from/solve.py << 'EOF'\nEOF\n"
+        )
         (tmp_path / "instruction.md").write_text("Write to `/from/instruction.py`.\n")
         inst = _make_evaluator(str(tmp_path))
         assert inst._extract_solution_path() == "/from/solve.py"
@@ -191,6 +220,7 @@ def _mock_docker_exec(outputs: dict):
     Args:
         outputs: mapping from container path to (returncode, stdout) tuples.
     """
+
     def side_effect(cmd, **kwargs):
         # Detect "docker exec <cid> cat <path>" calls.
         if cmd[:2] == ["docker", "exec"] and "cat" in cmd:
@@ -199,6 +229,7 @@ def _mock_docker_exec(outputs: dict):
                 rc, stdout = outputs[path]
                 return MagicMock(returncode=rc, stdout=stdout)
         return MagicMock(returncode=1, stdout="")
+
     return side_effect
 
 
@@ -210,19 +241,29 @@ class TestReadReward:
 
     def test_reads_reward_txt(self):
         inst = self._make_inst()
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (1, ""),
-            "/logs/verifier/reward.txt": (0, "0.75\n"),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (1, ""),
+                    "/logs/verifier/reward.txt": (0, "0.75\n"),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.75
 
     def test_reads_reward_json_with_reward_key(self):
         inst = self._make_inst()
         payload = json.dumps({"reward": 0.9, "time_ms": 123})
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (0, payload),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (0, payload),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.9
         assert result.metrics["time_ms"] == 123.0
@@ -230,56 +271,86 @@ class TestReadReward:
     def test_reads_reward_json_with_score_key(self):
         inst = self._make_inst()
         payload = json.dumps({"score": 0.5})
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (0, payload),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (0, payload),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.5
 
     def test_json_preferred_over_txt(self):
         inst = self._make_inst()
         payload = json.dumps({"reward": 0.9})
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (0, payload),
-            "/logs/verifier/reward.txt": (0, "0.1\n"),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (0, payload),
+                    "/logs/verifier/reward.txt": (0, "0.1\n"),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.9
 
     def test_missing_reward_key_defaults_to_zero(self):
         inst = self._make_inst()
         payload = json.dumps({"time_ms": 500})
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (0, payload),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (0, payload),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.0
 
     def test_no_reward_files_returns_zero(self):
         inst = self._make_inst()
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (1, ""),
-            "/logs/verifier/reward.txt": (1, ""),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (1, ""),
+                    "/logs/verifier/reward.txt": (1, ""),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.0
         assert "error" in result.artifacts
 
     def test_malformed_json_falls_back_to_txt(self):
         inst = self._make_inst()
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (0, "{bad json"),
-            "/logs/verifier/reward.txt": (0, "0.42\n"),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (0, "{bad json"),
+                    "/logs/verifier/reward.txt": (0, "0.42\n"),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.42
 
     def test_non_numeric_txt_falls_through(self):
         inst = self._make_inst()
-        with patch("subprocess.run", side_effect=_mock_docker_exec({
-            "/logs/verifier/reward.json": (1, ""),
-            "/logs/verifier/reward.txt": (0, "not a number"),
-        })):
+        with patch(
+            "subprocess.run",
+            side_effect=_mock_docker_exec(
+                {
+                    "/logs/verifier/reward.json": (1, ""),
+                    "/logs/verifier/reward.txt": (0, "not a number"),
+                }
+            ),
+        ):
             result = inst._read_reward()
         assert result.metrics["combined_score"] == 0.0
         assert "error" in result.artifacts

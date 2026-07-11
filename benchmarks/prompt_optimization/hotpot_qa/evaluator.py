@@ -99,6 +99,7 @@ class BenchmarkMeta:
     metric_with_feedback: Callable = None
     feedback_fn_maps: list[dict] = None
 
+
 class HotpotQABench(Benchmark):
     def init_dataset(self):
         raw_datasets = load_dataset("hotpot_qa", "fullwiki")
@@ -322,12 +323,14 @@ def create_lm(lm_config: dict):
     return dspy.LM(**config, **fixed_config)
 
 
-lm_for_optimizer = create_lm({
-    "model": "openai/gpt-5-mini",
-    "temperature": 1,
-    "api_key": os.environ.get("OPENAI_API_KEY"),
-    "api_base": os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
-})
+lm_for_optimizer = create_lm(
+    {
+        "model": "openai/gpt-5-mini",
+        "temperature": 1,
+        "api_key": os.environ.get("OPENAI_API_KEY"),
+        "api_base": os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
+    }
+)
 adapter = dspy.settings.adapter  # if "qwen" not in lm_name else XMLAdapter()
 dspy.configure(lm=lm_for_optimizer, adapter=adapter)
 

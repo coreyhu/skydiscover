@@ -5,6 +5,7 @@ Real-Time Adaptive Signal Processing Algorithm for Non-Stationary Time Series
 This algorithm implements a sliding window approach to filter volatile, non-stationary
 time series data while minimizing noise and preserving signal dynamics.
 """
+
 import numpy as np
 
 
@@ -20,7 +21,9 @@ def adaptive_filter(x, window_size=20):
         y: Filtered output signal with length = len(x) - window_size + 1
     """
     if len(x) < window_size:
-        raise ValueError(f"Input signal length ({len(x)}) must be >= window_size ({window_size})")
+        raise ValueError(
+            f"Input signal length ({len(x)}) must be >= window_size ({window_size})"
+        )
 
     # Initialize output array
     output_length = len(x) - window_size + 1
@@ -48,7 +51,9 @@ def enhanced_filter_with_trend_preservation(x, window_size=20):
         y: Filtered output signal
     """
     if len(x) < window_size:
-        raise ValueError(f"Input signal length ({len(x)}) must be >= window_size ({window_size})")
+        raise ValueError(
+            f"Input signal length ({len(x)}) must be >= window_size ({window_size})"
+        )
 
     output_length = len(x) - window_size + 1
     y = np.zeros(output_length)
@@ -125,7 +130,9 @@ def generate_test_signal(length=1000, noise_level=0.3, seed=42):
     return noisy_signal, clean_signal
 
 
-def run_signal_processing(noisy_signal=None, signal_length=1000, noise_level=0.3, window_size=20):
+def run_signal_processing(
+    noisy_signal=None, signal_length=1000, noise_level=0.3, window_size=20
+):
     """
     Run the signal processing algorithm on a test signal.
 
@@ -162,12 +169,16 @@ def run_signal_processing(noisy_signal=None, signal_length=1000, noise_level=0.3
         aligned_noisy = aligned_noisy[:min_length]
 
         # Calculate correlation with clean signal
-        correlation = np.corrcoef(filtered_signal, aligned_clean)[0, 1] if min_length > 1 else 0
+        correlation = (
+            np.corrcoef(filtered_signal, aligned_clean)[0, 1] if min_length > 1 else 0
+        )
 
         # Calculate noise reduction
         noise_before = np.var(aligned_noisy - aligned_clean)
         noise_after = np.var(filtered_signal - aligned_clean)
-        noise_reduction = (noise_before - noise_after) / noise_before if noise_before > 0 else 0
+        noise_reduction = (
+            (noise_before - noise_after) / noise_before if noise_before > 0 else 0
+        )
 
         return {
             "filtered_signal": filtered_signal,

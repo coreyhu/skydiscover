@@ -62,11 +62,15 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
         higher_is_better = getattr(db_config, "higher_is_better", None) or {}
         descriptions = []
         for objective in getattr(db_config, "pareto_objectives", None) or []:
-            direction = "maximize" if higher_is_better.get(objective, True) else "minimize"
+            direction = (
+                "maximize" if higher_is_better.get(objective, True) else "minimize"
+            )
             descriptions.append(f"{objective} ({direction})")
         return descriptions
 
-    def _metric_to_maximization_value(self, metric_name: str, value: Any) -> Optional[float]:
+    def _metric_to_maximization_value(
+        self, metric_name: str, value: Any
+    ) -> Optional[float]:
         from skydiscover.utils.metrics import normalize_metric_value
 
         higher_is_better = getattr(self._db_config(), "higher_is_better", None) or {}
@@ -91,7 +95,9 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
 
     def _task_objective_text(self) -> str:
         subject = (
-            "prompt" if (self.config.language or "").lower() in ("text", "prompt") else "program"
+            "prompt"
+            if (self.config.language or "").lower() in ("text", "prompt")
+            else "program"
         )
         if not self._is_multiobjective_enabled():
             return f"Suggest improvements to the {subject} that will improve its COMBINED_SCORE."
@@ -239,10 +245,13 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
     ) -> str:
         """Generate improvement bullets for scalar or Pareto mode."""
         if not self._is_multiobjective_enabled():
-            return super()._identify_improvement_areas(current_program, metrics, previous_programs)
+            return super()._identify_improvement_areas(
+                current_program, metrics, previous_programs
+            )
 
         improvement_areas = [
-            "Focus on Pareto trade-offs across: " + ", ".join(self._objective_descriptions())
+            "Focus on Pareto trade-offs across: "
+            + ", ".join(self._objective_descriptions())
         ]
 
         current_score = self._get_progress_score(metrics)
@@ -261,9 +270,13 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
                         f"Pareto proxy declined: {prev_score:.4f} -> {current_score:.4f}. Revisit recent trade-offs."
                     )
                 else:
-                    improvement_areas.append(f"Pareto proxy unchanged at {current_score:.4f}")
+                    improvement_areas.append(
+                        f"Pareto proxy unchanged at {current_score:.4f}"
+                    )
             elif current_score != missing:
-                improvement_areas.append(f"Pareto proxy at {current_score:.4f} (first measurement)")
+                improvement_areas.append(
+                    f"Pareto proxy at {current_score:.4f} (first measurement)"
+                )
 
         threshold = self.context_config.suggest_simplification_after_chars
         if threshold and len(current_program) > threshold:
@@ -372,7 +385,9 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
         if not siblings:
             return None
 
-        parent_fitness = self._get_progress_score(getattr(parent_program, "metrics", {}))
+        parent_fitness = self._get_progress_score(
+            getattr(parent_program, "metrics", {})
+        )
         missing = self._PROGRESS_SCORE_MISSING
 
         improved, regressed, unchanged = 0, 0, 0
@@ -399,7 +414,8 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
                 unchanged += 1
 
             entries.append(
-                f"  {i}. {parent_fitness:.4f} -> {child_fitness:.4f} " f"({delta:+.4f}) [{status}]"
+                f"  {i}. {parent_fitness:.4f} -> {child_fitness:.4f} "
+                f"({delta:+.4f}) [{status}]"
             )
 
         lines = [
@@ -415,22 +431,30 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
     ) -> str:
         """Format recent attempts using AdaEvolve's scalar proxy in Pareto mode."""
         if not self._is_multiobjective_enabled():
-            return super()._format_previous_attempts(previous_programs, num_previous_attempts)
+            return super()._format_previous_attempts(
+                previous_programs, num_previous_attempts
+            )
 
         if not previous_programs:
             return "No previous attempts yet."
 
         try:
-            previous_attempt_template = self.template_manager.get_template("previous_attempt")
+            previous_attempt_template = self.template_manager.get_template(
+                "previous_attempt"
+            )
         except (ValueError, KeyError):
             previous_attempt_template = "### Attempt {attempt_number}\n- Changes: {changes}\n- Metrics: {performance}\n- Outcome: {outcome}"
 
         previous_programs = sorted(
             previous_programs,
-            key=lambda program: self._get_progress_score(prog_attr(program, "metrics", {}) or {}),
+            key=lambda program: self._get_progress_score(
+                prog_attr(program, "metrics", {}) or {}
+            ),
             reverse=True,
         )
-        selected = previous_programs[: min(num_previous_attempts, len(previous_programs))]
+        selected = previous_programs[
+            : min(num_previous_attempts, len(previous_programs))
+        ]
 
         lines = []
         for i, program in enumerate(reversed(selected)):
@@ -448,7 +472,9 @@ class AdaEvolveContextBuilder(DefaultContextBuilder):
                         performance_parts.append(f"{name}: {value}")
                 else:
                     performance_parts.append(f"{name}: {value}")
-            performance_str = ", ".join(performance_parts) if performance_parts else "No metrics"
+            performance_str = (
+                ", ".join(performance_parts) if performance_parts else "No metrics"
+            )
 
             parent_metrics = metadata.get("parent_metrics", {})
             outcome = self._determine_outcome(metrics, parent_metrics)

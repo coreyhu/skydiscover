@@ -22,15 +22,24 @@ BENCHMARK = 32
 
 
 def verify_tensor_decomposition(
-    decomposition: tuple[np.ndarray, np.ndarray, np.ndarray], n: int, m: int, p: int, rank: int
+    decomposition: tuple[np.ndarray, np.ndarray, np.ndarray],
+    n: int,
+    m: int,
+    p: int,
+    rank: int,
 ):
     """Verifies the correctness of the tensor decomposition."""
 
     # Add robustness for cases where the optimizer might fail
-    if not all(isinstance(arr, np.ndarray) for arr in decomposition) or not decomposition:
+    if (
+        not all(isinstance(arr, np.ndarray) for arr in decomposition)
+        or not decomposition
+    ):
         raise ValueError("Decomposition must be a tuple of NumPy arrays.")
     if any(arr.size == 0 for arr in decomposition):
-        print("Warning: One or more decomposition arrays are empty. Verification skipped.")
+        print(
+            "Warning: One or more decomposition arrays are empty. Verification skipped."
+        )
         return
 
     # Check that each factor matrix has the correct shape.

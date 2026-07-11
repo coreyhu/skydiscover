@@ -48,7 +48,9 @@ class BeamSearchDatabase(ProgramDatabase):
         # Initialize beam-specific attributes BEFORE super().__init__()
         # because super().__init__() may call load() which needs these
         self.beam_width = getattr(config, "beam_width", 5)
-        self.selection_strategy = getattr(config, "beam_selection_strategy", "diversity_weighted")
+        self.selection_strategy = getattr(
+            config, "beam_selection_strategy", "diversity_weighted"
+        )
         self.diversity_weight = getattr(config, "beam_diversity_weight", 0.3)
         self.temperature = getattr(config, "beam_temperature", 1.0)
         self.depth_penalty = getattr(config, "beam_depth_penalty", 0.0)
@@ -173,7 +175,9 @@ class BeamSearchDatabase(ProgramDatabase):
 
         self.beam = set(selected)
 
-    def _diverse_selection(self, candidates: List[Tuple[str, Program, float]], k: int) -> List[str]:
+    def _diverse_selection(
+        self, candidates: List[Tuple[str, Program, float]], k: int
+    ) -> List[str]:
         """
         Select k programs balancing fitness and diversity.
 
@@ -281,7 +285,9 @@ class BeamSearchDatabase(ProgramDatabase):
             score = program.metrics["score"]
         else:
             # Average of all metrics
-            values = [v for v in program.metrics.values() if isinstance(v, (int, float))]
+            values = [
+                v for v in program.metrics.values() if isinstance(v, (int, float))
+            ]
             score = sum(values) / len(values) if values else 0.0
 
         # Apply depth penalty if configured
@@ -399,7 +405,9 @@ class BeamSearchDatabase(ProgramDatabase):
         Ensures all beam members get expanded equally.
         """
         # Sort by score for consistent ordering
-        sorted_candidates = sorted(candidates, key=self._get_program_score, reverse=True)
+        sorted_candidates = sorted(
+            candidates, key=self._get_program_score, reverse=True
+        )
 
         selected = sorted_candidates[self._rr_index % len(sorted_candidates)]
         self._rr_index += 1
@@ -433,13 +441,17 @@ class BeamSearchDatabase(ProgramDatabase):
             else:
                 diversity = 1.0
 
-            combined = (1 - self.diversity_weight) * fitness + self.diversity_weight * diversity
+            combined = (
+                1 - self.diversity_weight
+            ) * fitness + self.diversity_weight * diversity
             combined_scores.append(combined)
 
         # Select using softmax on combined scores
         if self.temperature > 0:
             max_score = max(combined_scores)
-            exp_scores = [math.exp((s - max_score) / self.temperature) for s in combined_scores]
+            exp_scores = [
+                math.exp((s - max_score) / self.temperature) for s in combined_scores
+            ]
             total = sum(exp_scores)
             probs = [e / total for e in exp_scores]
 
@@ -461,7 +473,9 @@ class BeamSearchDatabase(ProgramDatabase):
         Returns:
             List of programs in the beam, sorted by score (descending)
         """
-        beam_programs = [self.programs[pid] for pid in self.beam if pid in self.programs]
+        beam_programs = [
+            self.programs[pid] for pid in self.beam if pid in self.programs
+        ]
         return sorted(beam_programs, key=self._get_program_score, reverse=True)
 
     def get_unexpanded_beam(self) -> List[Program]:
@@ -516,7 +530,7 @@ class BeamSearchDatabase(ProgramDatabase):
             logger.info("Current beam:")
             for i, prog in enumerate(beam_progs[:5]):  # Show top 5
                 logger.info(
-                    f"  {i+1}. {prog.id}: score={self._get_program_score(prog):.4f}, "
+                    f"  {i + 1}. {prog.id}: score={self._get_program_score(prog):.4f}, "
                     f"depth={self.depth.get(prog.id, 0)}"
                 )
 
@@ -554,7 +568,9 @@ class BeamSearchDatabase(ProgramDatabase):
         # Save metadata including beam search state
         metadata = {
             "best_program_id": self.best_program_id,
-            "last_iteration": iteration if iteration is not None else self.last_iteration,
+            "last_iteration": iteration
+            if iteration is not None
+            else self.last_iteration,
             # Beam search specific state
             "beam": list(self.beam),
             "depth": self.depth,
@@ -617,12 +633,16 @@ class BeamSearchDatabase(ProgramDatabase):
                         program = Program.from_dict(program_data)
                         self.programs[program.id] = program
                     except Exception as e:
-                        logger.warning(f"Error loading program {program_file}: {str(e)}")
+                        logger.warning(
+                            f"Error loading program {program_file}: {str(e)}"
+                        )
 
         # Validate and reconstruct beam if needed
         self._validate_and_reconstruct_beam()
 
-        logger.info(f"Loaded BeamSearchDatabase with {len(self.programs)} programs from {path}")
+        logger.info(
+            f"Loaded BeamSearchDatabase with {len(self.programs)} programs from {path}"
+        )
         self.log_status()
 
     def _validate_and_reconstruct_beam(self) -> None:

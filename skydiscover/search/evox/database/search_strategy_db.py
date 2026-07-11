@@ -20,7 +20,9 @@ class SearchStrategyDatabase(ProgramDatabase):
     def __init__(self, name: str, config: DatabaseConfig):
         super().__init__(name, config)
 
-    def add(self, program: SearchStrategy, iteration: Optional[int] = None, **kwargs) -> str:
+    def add(
+        self, program: SearchStrategy, iteration: Optional[int] = None, **kwargs
+    ) -> str:
         """Add a program to the database."""
         self.programs[program.id] = program
 
@@ -55,7 +57,11 @@ class SearchStrategyDatabase(ProgramDatabase):
         num_to_sample = max(0, min(num_context_programs, len(available_programs)))
 
         other_context_programs = (
-            random.sample(available_programs, num_to_sample) if num_to_sample > 0 else []
+            random.sample(available_programs, num_to_sample)
+            if num_to_sample > 0
+            else []
         )
-        other_context_programs = [p for p in other_context_programs if p.id != parent.id]
+        other_context_programs = [
+            p for p in other_context_programs if p.id != parent.id
+        ]
         return {"": parent}, {"": other_context_programs}

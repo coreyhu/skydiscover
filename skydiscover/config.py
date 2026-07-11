@@ -193,10 +193,14 @@ class LLMConfig(LLMModelConfig):
         # (i.e. it differs from the hardcoded default).  When a custom api_base
         # is provided, we should NOT override it with the provider default so
         # that update_model_params() below can propagate the user's value.
-        user_set_api_base = self.api_base.rstrip("/") != _PROVIDERS["openai"][0].rstrip("/")
+        user_set_api_base = self.api_base.rstrip("/") != _PROVIDERS["openai"][0].rstrip(
+            "/"
+        )
         for model in self.models + self.evaluator_models + self.guide_models:
             if model.name and model.api_base is None:
-                provider, bare_name, provider_base, env_vars = _parse_model_spec(model.name)
+                provider, bare_name, provider_base, env_vars = _parse_model_spec(
+                    model.name
+                )
                 # Skip provider URL only for unrecognized bare names that fell
                 # through to the OpenAI default — never for an explicitly-prefixed
                 # provider (e.g. "anthropic/claude-3-sonnet") or a known bare prefix.
@@ -226,7 +230,9 @@ class LLMConfig(LLMModelConfig):
         }
         self.update_model_params(shared_config)
 
-    def update_model_params(self, args: Dict[str, Any], overwrite: bool = False) -> None:
+    def update_model_params(
+        self, args: Dict[str, Any], overwrite: bool = False
+    ) -> None:
         """Update model parameters for all models (including guide_models)."""
         all_models = self.models + self.evaluator_models + self.guide_models
         for model in all_models:
@@ -367,10 +373,14 @@ class EvoxDatabaseConfig(EvolveDatabaseConfig):
     def __post_init__(self):
         if self.database_file_path is None:
             # Initial guide strategy for the solution discovery
-            self.database_file_path = str(self._evox_database_dir / "initial_search_strategy.py")
+            self.database_file_path = str(
+                self._evox_database_dir / "initial_search_strategy.py"
+            )
         if self.evaluation_file is None:
             # Dummy evaluator for the guide strategy
-            self.evaluation_file = str(self._evox_database_dir / "search_strategy_evaluator.py")
+            self.evaluation_file = str(
+                self._evox_database_dir / "search_strategy_evaluator.py"
+            )
         if self.config_path is None:
             # Default config for the guide strategy
             self.config_path = str(self._evox_config_dir / "search.yaml")
@@ -459,7 +469,9 @@ class OpenEvolveNativeDatabaseConfig(DatabaseConfig):
     exploration_ratio: float = 0.2
     exploitation_ratio: float = 0.7
     elite_selection_ratio: float = 0.1
-    feature_dimensions: List[str] = field(default_factory=lambda: ["complexity", "diversity"])
+    feature_dimensions: List[str] = field(
+        default_factory=lambda: ["complexity", "diversity"]
+    )
     feature_bins: int = 10
     diversity_reference_size: int = 20
     migration_interval: int = 10
@@ -489,7 +501,9 @@ class GEPANativeDatabaseConfig(DatabaseConfig):
     """
 
     population_size: int = 40
-    candidate_selection_strategy: str = "epsilon_greedy"  # "epsilon_greedy", "best", "pareto"
+    candidate_selection_strategy: str = (
+        "epsilon_greedy"  # "epsilon_greedy", "best", "pareto"
+    )
     epsilon: float = 0.1
     max_rejection_history: int = 20
 
@@ -525,9 +539,7 @@ class SearchConfig:
     switch_interval: Optional[int] = (
         None  # EvoX: stagnation iters before strategy switch. Auto-calculated if None.
     )
-    share_llm: bool = (
-        False  # EvoX: if True, meta-level search evolution uses the same LLM as the main discovery process.
-    )
+    share_llm: bool = False  # EvoX: if True, meta-level search evolution uses the same LLM as the main discovery process.
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -574,7 +586,9 @@ class BenchmarkConfig:
     resolver: Optional[str] = (
         None  # Python import path to resolver module (e.g., 'benchmarks.kernelbench.resolver')
     )
-    params: Dict[str, Any] = field(default_factory=dict)  # Benchmark-specific parameters
+    params: Dict[str, Any] = field(
+        default_factory=dict
+    )  # Benchmark-specific parameters
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -647,7 +661,11 @@ class Config:
                         with open(file_path, "r") as f:
                             config_dict["prompt"]["system_message"] = f.read()
                 except OSError:
-                    logger.debug("Could not read system_message from %s", file_path, exc_info=True)
+                    logger.debug(
+                        "Could not read system_message from %s",
+                        file_path,
+                        exc_info=True,
+                    )
 
         return cls.from_dict(config_dict)
 
@@ -686,7 +704,9 @@ class Config:
                     LLMModelConfig(**m) for m in llm_dict["evaluator_models"]
                 ]
             if "guide_models" in llm_dict:
-                llm_dict["guide_models"] = [LLMModelConfig(**m) for m in llm_dict["guide_models"]]
+                llm_dict["guide_models"] = [
+                    LLMModelConfig(**m) for m in llm_dict["guide_models"]
+                ]
             config.llm = LLMConfig(**llm_dict)
         if "prompt" in config_dict:
             config.context_builder = ContextBuilderConfig(**config_dict["prompt"])
@@ -716,16 +736,26 @@ class Config:
             agentic_dict = dict(config_dict["agentic"])  # copy to avoid mutating input
             # Convert list fields to tuples for the dataclass
             for tuple_field in ("allowed_extensions", "excluded_dirs"):
-                if tuple_field in agentic_dict and isinstance(agentic_dict[tuple_field], list):
+                if tuple_field in agentic_dict and isinstance(
+                    agentic_dict[tuple_field], list
+                ):
                     agentic_dict[tuple_field] = tuple(agentic_dict[tuple_field])
             config.agentic = AgenticConfig(**agentic_dict)
         if "benchmark" in config_dict:
             benchmark_dict = config_dict["benchmark"]
             # Separate known dataclass fields from benchmark-specific parameters
-            known_fields = {f.name for f in fields(BenchmarkConfig) if f.name != "params"}
-            benchmark_known = {k: v for k, v in benchmark_dict.items() if k in known_fields}
-            benchmark_params = {k: v for k, v in benchmark_dict.items() if k not in known_fields}
-            config.benchmark = BenchmarkConfig(**benchmark_known, params=benchmark_params)
+            known_fields = {
+                f.name for f in fields(BenchmarkConfig) if f.name != "params"
+            }
+            benchmark_known = {
+                k: v for k, v in benchmark_dict.items() if k in known_fields
+            }
+            benchmark_params = {
+                k: v for k, v in benchmark_dict.items() if k not in known_fields
+            }
+            config.benchmark = BenchmarkConfig(
+                **benchmark_known, params=benchmark_params
+            )
         if "monitor" in config_dict:
             config.monitor = MonitorConfig(**config_dict["monitor"])
 
@@ -843,7 +873,9 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Config:
             config.llm.update_model_params({"api_key": api_key})
 
     # Make the system message available to the individual models, in case it is not provided from the prompt sampler
-    config.llm.update_model_params({"system_message": config.context_builder.system_message})
+    config.llm.update_model_params(
+        {"system_message": config.context_builder.system_message}
+    )
 
     # Bridge provider env vars so that downstream configs (e.g. evox search.yaml)
     # can resolve ${OPENAI_API_KEY} from the environment.
@@ -877,12 +909,15 @@ def bridge_provider_env(config: Config) -> None:
         os.environ.setdefault("OPENAI_API_BASE", model.api_base)
 
 
-def build_output_dir(search_type: str, initial_program_path: str, base_dir: str = "outputs") -> str:
+def build_output_dir(
+    search_type: str, initial_program_path: str, base_dir: str = "outputs"
+) -> str:
     """Build a standardized output directory: outputs/<search_type>/<problem_name>_<MMDD_HHMM>/"""
     from datetime import datetime
 
     problem_name = (
-        os.path.basename(os.path.dirname(os.path.abspath(initial_program_path))) or "unknown"
+        os.path.basename(os.path.dirname(os.path.abspath(initial_program_path)))
+        or "unknown"
     )
     timestamp = datetime.now().strftime("%m%d_%H%M")
     return os.path.join(base_dir, search_type, f"{problem_name}_{timestamp}")
@@ -929,10 +964,12 @@ def apply_overrides(
             config.llm.api_key = models[0].api_key
         config.llm.models = models
         config.llm.evaluator_models = [
-            LLMModelConfig(name=m.name, api_base=m.api_base, api_key=m.api_key) for m in models
+            LLMModelConfig(name=m.name, api_base=m.api_base, api_key=m.api_key)
+            for m in models
         ]
         config.llm.guide_models = [
-            LLMModelConfig(name=m.name, api_base=m.api_base, api_key=m.api_key) for m in models
+            LLMModelConfig(name=m.name, api_base=m.api_base, api_key=m.api_key)
+            for m in models
         ]
     elif api_base:
         config.llm.api_base = api_base

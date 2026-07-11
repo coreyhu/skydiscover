@@ -4,6 +4,7 @@ import json
 from broadcast import *
 from utils import *
 
+
 class BCSimulator:
     # Default variables
     data_vol: float = 4.0  # size of data to be sent to multiple dsts
@@ -49,8 +50,12 @@ class BCSimulator:
         providers = ["aws", "gcp", "azure"]
         provider_ingress = [10, 16, 16]
         provider_egress = [5, 7, 16]
-        self.ingress_limits = {providers[i]: provider_ingress[i] for i in range(len(providers))}
-        self.egress_limits = {providers[i]: provider_egress[i] for i in range(len(providers))}
+        self.ingress_limits = {
+            providers[i]: provider_ingress[i] for i in range(len(providers))
+        }
+        self.egress_limits = {
+            providers[i]: provider_egress[i] for i in range(len(providers))
+        }
 
         if "ingress_limit" in config:
             for p, limit in config["ingress_limit"].items():
@@ -75,9 +80,11 @@ class BCSimulator:
             print("--")
             print(path)
             for i in range(len(path) - 1):
-                print(f"Flow: {self.g[path[i]][path[i+1]]['flow']}")
-                print(f"Actual throughput: {round(self.g[path[i]][path[i+1]]['throughput'], 4)}")
-                print(f"Cost: {self.g[path[i]][path[i+1]]['cost']}\n")
+                print(f"Flow: {self.g[path[i]][path[i + 1]]['flow']}")
+                print(
+                    f"Actual throughput: {round(self.g[path[i]][path[i + 1]]['throughput'], 4)}"
+                )
+                print(f"Cost: {self.g[path[i]][path[i + 1]]['cost']}\n")
 
         # evaluate transfer time and total cost
         max_t, avg_t, last_dst = self.__transfer_time()
@@ -109,8 +116,16 @@ class BCSimulator:
                     src, dst, edge_data = edge[0], edge[1], edge[2]
                     if not g.has_edge(src, dst):
                         cost = edge_data["cost"]
-                        throughput = edge_data["throughput"]  # * self.default_vms_per_region
-                        g.add_edge(src, dst, throughput=throughput, cost=edge_data["cost"], flow=throughput)
+                        throughput = edge_data[
+                            "throughput"
+                        ]  # * self.default_vms_per_region
+                        g.add_edge(
+                            src,
+                            dst,
+                            throughput=throughput,
+                            cost=edge_data["cost"],
+                            flow=throughput,
+                        )
                         g[src][dst]["partitions"] = set()
                     g[src][dst]["partitions"].add(partition_id)
 
@@ -133,7 +148,10 @@ class BCSimulator:
                     # or assign based on num of incoming flows
                     flow_proportion = 1 / len(list(in_edges))
 
-                    g[src][dst]["flow"] = min(g[src][dst]["flow"], self.ingress_limits[provider] * flow_proportion)
+                    g[src][dst]["flow"] = min(
+                        g[src][dst]["flow"],
+                        self.ingress_limits[provider] * flow_proportion,
+                    )
 
             if out_flow_sum > self.egress_limits[provider]:
                 # print("\nExceed egress limit")
@@ -147,12 +165,19 @@ class BCSimulator:
                     flow_proportion = 1 / len(list(out_edges))
 
                     print(f"src: {src}, dst: {dst}, flow proportion: {flow_proportion}")
-                    g[src][dst]["flow"] = min(g[src][dst]["flow"], self.egress_limits[provider] * flow_proportion)
+                    g[src][dst]["flow"] = min(
+                        g[src][dst]["flow"],
+                        self.egress_limits[provider] * flow_proportion,
+                    )
 
         return g
 
     def __get_path(self):
-        all_paths = [path for node in self.dsts for path in nx.all_simple_paths(self.g, self.src, node)]
+        all_paths = [
+            path
+            for node in self.dsts
+            for path in nx.all_simple_paths(self.g, self.src, node)
+        ]
         return all_paths
 
     def __slowest_capacity_link(self):
@@ -166,13 +191,19 @@ class BCSimulator:
             partition_time = float("-inf")
             for i in range(self.num_partitions):
                 path_edges = self.paths[dst][str(i)]
-                bottleneck = min(self.g[e[0]][e[1]]['flow'] for e in path_edges)
-                t = self.partition_data_vol / bottleneck if bottleneck > 0 else float('inf')
+                bottleneck = min(self.g[e[0]][e[1]]["flow"] for e in path_edges)
+                t = (
+                    self.partition_data_vol / bottleneck
+                    if bottleneck > 0
+                    else float("inf")
+                )
                 partition_time = max(partition_time, t)
             t_dict[dst] = partition_time
 
         max_t = max(t_dict.values())
-        last_dst = [k for k, v in t_dict.items() if v == max_t]  # last dst receiving obj
+        last_dst = [
+            k for k, v in t_dict.items() if v == max_t
+        ]  # last dst receiving obj
         avg_t = sum(t_dict.values()) / len(t_dict.values())
         return max_t, avg_t, last_dst
 
@@ -181,8 +212,10 @@ class BCSimulator:
         for edge in self.g.edges.data():
             edge_data = edge[-1]
             sum_egress_cost += (
-                len(edge_data["partitions"]) * self.partition_data_vol * edge_data["cost"]
-            )  
+                len(edge_data["partitions"])
+                * self.partition_data_vol
+                * edge_data["cost"]
+            )
 
         runtime_s, _, _ = self.__transfer_time(log=False)
         runtime_s = round(runtime_s, 2)
@@ -190,7 +223,11 @@ class BCSimulator:
         for node in self.g.nodes():
             # print("Default vm per region: ", self.default_vms_per_region)
             # print("Cost per instance hr: ", (self.cost_per_instance_hr / 3600) * runtime_s)
-            sum_instance_cost += self.default_vms_per_region * (self.cost_per_instance_hr / 3600) * runtime_s
+            sum_instance_cost += (
+                self.default_vms_per_region
+                * (self.cost_per_instance_hr / 3600)
+                * runtime_s
+            )
 
         sum_cost = sum_egress_cost + sum_instance_cost
         return sum_cost

@@ -7,7 +7,13 @@ class SingleDstPath(Dict):
 
 
 class BroadCastTopology:
-    def __init__(self, src: str, dsts: List[str], num_partitions: int = 4, paths: Dict[str, SingleDstPath] = None):
+    def __init__(
+        self,
+        src: str,
+        dsts: List[str],
+        num_partitions: int = 4,
+        paths: Dict[str, SingleDstPath] = None,
+    ):
         self.src = src  # single str
         self.dsts = dsts  # list of strs
         self.num_partitions = num_partitions
@@ -18,7 +24,9 @@ class BroadCastTopology:
             self.paths = paths
             self.set_graph()
         else:
-            self.paths = {dst: SingleDstPath().fromkeys(range(num_partitions)) for dst in dsts}
+            self.paths = {
+                dst: SingleDstPath().fromkeys(range(num_partitions)) for dst in dsts
+            }
 
     def get_paths(self):
         print(f"now the set path is: {self.paths}")

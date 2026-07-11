@@ -288,7 +288,9 @@ def get_available_packages(problem_dir=None) -> list:
                             continue
                         packages.append(line)
                     if packages:
-                        logger.info(f"Read {len(packages)} packages from {requirements_path}")
+                        logger.info(
+                            f"Read {len(packages)} packages from {requirements_path}"
+                        )
                         return packages
                 except Exception as e:
                     logger.warning(f"Could not read {requirements_path} ({e})")
@@ -314,7 +316,9 @@ def get_available_packages(problem_dir=None) -> list:
                 logger.info(f"Read {len(packages)} packages from {requirements_path}")
                 return packages
         except Exception as e:
-            logger.warning(f"Could not read requirements.txt ({e}), trying pyproject.toml")
+            logger.warning(
+                f"Could not read requirements.txt ({e}), trying pyproject.toml"
+            )
 
     # Priority 3: pyproject.toml
     try:
@@ -336,7 +340,9 @@ def get_available_packages(problem_dir=None) -> list:
         dependencies = data.get("project", {}).get("dependencies", [])
         return dependencies
     except (ImportError, FileNotFoundError, KeyError) as e:
-        logger.warning(f"Could not read pyproject.toml ({e}), falling back to uv pip list")
+        logger.warning(
+            f"Could not read pyproject.toml ({e}), falling back to uv pip list"
+        )
         try:
             result = subprocess.run(
                 ["uv", "pip", "list", "--format", "json"],
@@ -401,7 +407,9 @@ def _extract_examples(response: str, is_diverge: bool = True) -> str:
             in_examples = True
             examples_lines.append(line)
         elif in_examples:
-            if line.strip().startswith("Format:") or line.strip().startswith("Your solution"):
+            if line.strip().startswith("Format:") or line.strip().startswith(
+                "Your solution"
+            ):
                 break
             if line.strip() in ("```", "```\n"):
                 continue
@@ -428,7 +436,9 @@ def _build_operator_prompt(
 ) -> str:
     """Build the user prompt for variation operator generation."""
     available_packages = get_available_packages(problem_dir=problem_dir)
-    packages_list = "\n".join(available_packages) if available_packages else "No packages found"
+    packages_list = (
+        "\n".join(available_packages) if available_packages else "No packages found"
+    )
 
     initial_program_section = ""
     if initial_program_solution:
@@ -471,7 +481,9 @@ For EXPLOITATION guidance block, focus on INTENSIFYING within existing approache
 def _operators_from_response(combined_response: str) -> Tuple[str, str]:
     """Parse LLM response and build diverge/refine variation operators."""
     explore_examples, refine_examples = _parse_combined_response(combined_response)
-    diverge_operator = DIVERGE_TEMPLATE.replace("{GENERATED_EXAMPLES}", explore_examples)
+    diverge_operator = DIVERGE_TEMPLATE.replace(
+        "{GENERATED_EXAMPLES}", explore_examples
+    )
     refine_operator = REFINE_TEMPLATE.replace("{GENERATED_EXAMPLES}", refine_examples)
     return diverge_operator, refine_operator
 
@@ -569,7 +581,9 @@ def main():
             print(f"Loading initial program from: {initial_program_path}")
             initial_program_solution = load_initial_program(initial_program_path)
         else:
-            print(f"Warning: --provide-initial set but {initial_program_path} not found, skipping")
+            print(
+                f"Warning: --provide-initial set but {initial_program_path} not found, skipping"
+            )
 
     # Build LLMPool for CLI usage
     from skydiscover.config import LLMModelConfig

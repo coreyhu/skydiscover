@@ -6,7 +6,9 @@ from typing import Any, Mapping
 
 
 def is_dominated(y, programs, program_at_pareto_front_valset):
-    y_fronts = [front for front in program_at_pareto_front_valset.values() if y in front]
+    y_fronts = [
+        front for front in program_at_pareto_front_valset.values() if y in front
+    ]
     for front in y_fronts:
         found_dominator_in_front = False
         for other_prog in front:

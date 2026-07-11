@@ -119,7 +119,9 @@ class BestOfNDatabase(ProgramDatabase):
             # Fallback: use all available programs except parent
             all_candidates = [p for p in self.programs.values() if p.id != parent.id]
             other_context_programs = (
-                random.sample(all_candidates, min(num_context_programs, len(all_candidates)))
+                random.sample(
+                    all_candidates, min(num_context_programs, len(all_candidates))
+                )
                 if all_candidates
                 else []
             )

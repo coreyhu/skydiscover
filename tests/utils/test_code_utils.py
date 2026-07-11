@@ -7,7 +7,9 @@ import pytest
 
 # Load code_utils directly from file to avoid pulling in the full skydiscover
 # package (which requires openai, yaml, etc. not needed for these unit tests).
-_code_utils_path = Path(__file__).resolve().parents[2] / "skydiscover" / "utils" / "code_utils.py"
+_code_utils_path = (
+    Path(__file__).resolve().parents[2] / "skydiscover" / "utils" / "code_utils.py"
+)
 _spec = importlib.util.spec_from_file_location("code_utils", _code_utils_path)
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)

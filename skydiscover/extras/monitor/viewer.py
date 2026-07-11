@@ -236,7 +236,9 @@ def main() -> None:
         print(f"Error: no programs found in '{ckpt_dir}'")
         sys.exit(1)
 
-    logger.info(f"Loaded {len(prog_list)} programs (best={best_id}, last_iter={last_iter})")
+    logger.info(
+        f"Loaded {len(prog_list)} programs (best={best_id}, last_iter={last_iter})"
+    )
 
     all_progs = {p["id"]: p for p in prog_list}
     monitor_programs = [_to_monitor_format(p, all_progs) for p in prog_list]
@@ -251,7 +253,9 @@ def main() -> None:
     if not summary_model and os.environ.get("OPENAI_API_KEY"):
         summary_model = "gpt-5-mini"
     if summary_model:
-        server.configure_summary(model=summary_model, api_base=args.summary_api_base, interval=0)
+        server.configure_summary(
+            model=summary_model, api_base=args.summary_api_base, interval=0
+        )
 
     server.start()
 
@@ -295,7 +299,9 @@ def main() -> None:
     if summary_model:
         print(f"  Per-program summaries: {summary_model}")
     else:
-        print("  Per-program summaries: disabled (set OPENAI_API_KEY or --summary-model)")
+        print(
+            "  Per-program summaries: disabled (set OPENAI_API_KEY or --summary-model)"
+        )
     print("  Press Ctrl+C to stop\n")
 
     try:

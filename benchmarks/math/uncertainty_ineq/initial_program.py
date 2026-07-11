@@ -54,7 +54,9 @@ class UncertaintyOptimizer:
             -(jnp.sum(c_others * H_vals_at_zero[1:-1]) + c_last * H_vals_at_zero[-1])
             / H_vals_at_zero[0]
         )
-        hermite_coeffs = jnp.concatenate([jnp.array([c0]), c_others, jnp.array([c_last])])
+        hermite_coeffs = jnp.concatenate(
+            [jnp.array([c0]), c_others, jnp.array([c_last])]
+        )
 
         poly_coeffs_std = jnp.sum(hermite_coeffs[:, None] * hermite_basis, axis=0)
         p_values = jnp.polyval(poly_coeffs_std, x_grid)
@@ -83,8 +85,12 @@ class UncertaintyOptimizer:
 
 def run_single_trial(optimizer: UncertaintyOptimizer, key: jax.random.PRNGKey):
     """Runs one full optimization from a near-good starting point with small noise."""
-    num_params_to_opt = optimizer.hypers.num_hermite_coeffs - 1  # = 3 when using H0,H4,H8,H12
-    assert num_params_to_opt == 3, "This initialization assumes num_hermite_coeffs == 4."
+    num_params_to_opt = (
+        optimizer.hypers.num_hermite_coeffs - 1
+    )  # = 3 when using H0,H4,H8,H12
+    assert num_params_to_opt == 3, (
+        "This initialization assumes num_hermite_coeffs == 4."
+    )
 
     base_c1 = -0.01158510802599293
     base_c2 = -8.921606035407065e-05
@@ -109,7 +115,9 @@ def run_single_trial(optimizer: UncertaintyOptimizer, key: jax.random.PRNGKey):
     return params
 
 
-def _build_P_from_hermite_coeffs(hermite_coeffs: np.ndarray, degrees: list[int]) -> np.poly1d:
+def _build_P_from_hermite_coeffs(
+    hermite_coeffs: np.ndarray, degrees: list[int]
+) -> np.poly1d:
     """Build monomial-basis polynomial P from Hermite-basis coefficients."""
     max_degree = degrees[-1]
     hermite_polys = [hermite(d) for d in degrees]
@@ -168,7 +176,8 @@ def get_c4_from_params(params: np.ndarray, hypers: Hyperparameters):
 
     # Enforce P(0) = 0
     c0 = (
-        -(np.sum(c_others * H_vals_at_zero[1:-1]) + c_last * H_vals_at_zero[-1]) / H_vals_at_zero[0]
+        -(np.sum(c_others * H_vals_at_zero[1:-1]) + c_last * H_vals_at_zero[-1])
+        / H_vals_at_zero[0]
     )
     hermite_coeffs = np.concatenate([[c0], np.array(c_others), [c_last]])
 

@@ -65,7 +65,9 @@ class ErdosOptimizer:
             latent_h_values = optax.apply_updates(latent_h_values, updates)
             return latent_h_values, opt_state, loss
 
-        print(f"Optimizing a step function with {self.hypers.num_intervals} intervals...")
+        print(
+            f"Optimizing a step function with {self.hypers.num_intervals} intervals..."
+        )
         for step in tqdm.tqdm(range(self.hypers.num_steps), desc="Optimizing"):
             latent_h_values, opt_state, loss = train_step(latent_h_values, opt_state)
 

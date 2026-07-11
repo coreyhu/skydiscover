@@ -20,12 +20,16 @@ import numpy as np
 BENCHMARK = 0.8962799441554086
 
 
-def verify_c2_solution(f_values: np.ndarray, c2_achieved_from_opt: float, n_points: int):
+def verify_c2_solution(
+    f_values: np.ndarray, c2_achieved_from_opt: float, n_points: int
+):
     """
     Verifies the C2 lower bound solution using the rigorous, unitless, piecewise linear integral method.
     """
     if f_values.shape != (n_points,):
-        raise ValueError(f"Expected function values shape {(n_points,)}. Got {f_values.shape}.")
+        raise ValueError(
+            f"Expected function values shape {(n_points,)}. Got {f_values.shape}."
+        )
 
     if np.any(f_values < -1e-6):  # Allow for small floating point errors
         raise ValueError("Function must be non-negative.")

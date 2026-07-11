@@ -6,7 +6,10 @@ import pytest
 
 from skydiscover.config import AdaEvolveDatabaseConfig, Config
 from skydiscover.context_builder.adaevolve import AdaEvolveContextBuilder
-from skydiscover.search.adaevolve.archive.unified_archive import ArchiveConfig, UnifiedArchive
+from skydiscover.search.adaevolve.archive.unified_archive import (
+    ArchiveConfig,
+    UnifiedArchive,
+)
 from skydiscover.search.adaevolve.database import AdaEvolveDatabase
 from skydiscover.search.adaevolve.paradigm.generator import ParadigmGenerator
 from skydiscover.search.base_database import Program
@@ -238,7 +241,9 @@ class TestIslandPareto:
 
         db.add(_make_program("a1", accuracy=0.95, latency=50.0), target_island=0)
         db.add(_make_program("a2", accuracy=0.90, latency=10.0), target_island=0)
-        db.add(_make_program("a3", accuracy=0.80, latency=100.0), target_island=0)  # dominated
+        db.add(
+            _make_program("a3", accuracy=0.80, latency=100.0), target_island=0
+        )  # dominated
 
         db.add(_make_program("b1", accuracy=0.85, latency=15.0), target_island=1)
 
@@ -380,7 +385,9 @@ class TestNormalizeMetricValue:
     def test_nan_returns_none(self):
         """NaN breaks comparison semantics and must not enter objective vectors."""
         assert normalize_metric_value("acc", float("nan"), {"acc": True}) is None
-        assert normalize_metric_value("latency", float("nan"), {"latency": False}) is None
+        assert (
+            normalize_metric_value("latency", float("nan"), {"latency": False}) is None
+        )
 
 
 # =========================================================================
@@ -413,13 +420,14 @@ class TestUnifiedArchiveFitnessFallbacks:
         archive.add(fast)
 
         assert archive.get_best().id == "fast"
-        assert [program.id for program in archive.get_top_programs(2)] == ["fast", "slow"]
+        assert [program.id for program in archive.get_top_programs(2)] == [
+            "fast",
+            "slow",
+        ]
 
     def test_archive_normalize_delegates_to_shared_utility(self):
         """Verify archive's _normalize_metric_value uses the shared function."""
-        archive = UnifiedArchive(
-            config=ArchiveConfig(higher_is_better={"loss": False})
-        )
+        archive = UnifiedArchive(config=ArchiveConfig(higher_is_better={"loss": False}))
         assert archive._normalize_metric_value("loss", 5.0) == -5.0
         assert archive._normalize_metric_value("acc", 0.9) == 0.9
         assert archive._normalize_metric_value("acc", "string") is None
@@ -477,7 +485,10 @@ class TestAdaEvolveMultiobjectivePrompts:
             },
         )
 
-        assert "Pareto trade-offs across: accuracy (maximize), latency (minimize)." in prompt["user"]
+        assert (
+            "Pareto trade-offs across: accuracy (maximize), latency (minimize)."
+            in prompt["user"]
+        )
         assert "Pareto proxy" in prompt["user"]
         assert "COMBINED_SCORE" not in prompt["user"]
 
@@ -509,7 +520,10 @@ class TestAdaEvolveMultiobjectivePrompts:
             previously_tried=[],
         )
 
-        assert "Optimize the Pareto trade-offs across: accuracy (maximize), latency (minimize)." in prompt
+        assert (
+            "Optimize the Pareto trade-offs across: accuracy (maximize), latency (minimize)."
+            in prompt
+        )
         assert '"what_to_optimize": "accuracy, latency"' in prompt
         assert "combined_score" not in prompt
 

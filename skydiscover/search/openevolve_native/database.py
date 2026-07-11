@@ -103,7 +103,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         self.archive_size: int = getattr(config, "archive_size", 100)
         self.exploration_ratio: float = getattr(config, "exploration_ratio", 0.2)
         self.exploitation_ratio: float = getattr(config, "exploitation_ratio", 0.7)
-        self.elite_selection_ratio: float = getattr(config, "elite_selection_ratio", 0.1)
+        self.elite_selection_ratio: float = getattr(
+            config, "elite_selection_ratio", 0.1
+        )
         self.feature_dimensions: List[str] = list(
             getattr(config, "feature_dimensions", ["complexity", "diversity"])
         )
@@ -112,7 +114,10 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         if isinstance(raw_bins, int):
             self.feature_bins: int = max(
                 raw_bins,
-                int(pow(self.archive_size, 1 / max(len(self.feature_dimensions), 1)) + 0.99),
+                int(
+                    pow(self.archive_size, 1 / max(len(self.feature_dimensions), 1))
+                    + 0.99
+                ),
             )
         else:
             self.feature_bins = 10
@@ -120,16 +125,22 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         if isinstance(raw_bins, dict):
             self.feature_bins_per_dim: Dict[str, int] = raw_bins
         else:
-            self.feature_bins_per_dim = {d: self.feature_bins for d in self.feature_dimensions}
+            self.feature_bins_per_dim = {
+                d: self.feature_bins for d in self.feature_dimensions
+            }
 
-        self.diversity_reference_size: int = getattr(config, "diversity_reference_size", 20)
+        self.diversity_reference_size: int = getattr(
+            config, "diversity_reference_size", 20
+        )
         self.migration_interval: int = getattr(config, "migration_interval", 10)
         self.migration_rate: float = getattr(config, "migration_rate", 0.1)
 
         # --- Island state (MUST be set before super().__init__ which may
         #     call self.load() if db_path exists) ---
         self.islands: List[Set[str]] = [set() for _ in range(self.num_islands)]
-        self.island_feature_maps: List[Dict[str, str]] = [{} for _ in range(self.num_islands)]
+        self.island_feature_maps: List[Dict[str, str]] = [
+            {} for _ in range(self.num_islands)
+        ]
         self.island_best_programs: List[Optional[str]] = [None] * self.num_islands
         self.island_generations: List[int] = [0] * self.num_islands
         self.current_island: int = 0
@@ -181,7 +192,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         parent = self._sample_parent()
         if num_context_programs is None:
             num_context_programs = 4
-        other_context_programs = self._sample_other_context_programs(parent, n=num_context_programs)
+        other_context_programs = self._sample_other_context_programs(
+            parent, n=num_context_programs
+        )
 
         logger.debug(
             "Sampled parent %s from island %d, %d other context programs",
@@ -364,7 +377,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
     # Context program(s) sampling (island-scoped)
     # ==================================================================
 
-    def _sample_other_context_programs(self, parent: Program, n: int = 4) -> List[Program]:
+    def _sample_other_context_programs(
+        self, parent: Program, n: int = 4
+    ) -> List[Program]:
         """Sample other context programs from parent's island.
 
         Strategy (matching OpenEvolve):
@@ -375,7 +390,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         """
         parent_island = parent.metadata.get("island", self.current_island)
         island_program_ids = list(self.islands[parent_island])
-        island_programs = [self.programs[pid] for pid in island_program_ids if pid in self.programs]
+        island_programs = [
+            self.programs[pid] for pid in island_program_ids if pid in self.programs
+        ]
 
         if not island_programs:
             return []
@@ -471,7 +488,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
                 if len(self.programs) < 2:
                     coords.append(0)
                 else:
-                    coords.append(self._to_bin("diversity", self._get_cached_diversity(program)))
+                    coords.append(
+                        self._to_bin("diversity", self._get_cached_diversity(program))
+                    )
             elif dim == "score":
                 if not program.metrics:
                     coords.append(0)
@@ -562,7 +581,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
 
         # LRU eviction
         if len(self.diversity_cache) >= self.diversity_cache_size:
-            oldest = min(self.diversity_cache, key=lambda h: self.diversity_cache[h]["timestamp"])
+            oldest = min(
+                self.diversity_cache, key=lambda h: self.diversity_cache[h]["timestamp"]
+            )
             del self.diversity_cache[oldest]
 
         self.diversity_cache[code_hash] = {
@@ -589,7 +610,10 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         while len(selected) < self.diversity_reference_size and remaining:
             best_idx, best_div = -1, -1.0
             for i, cand in enumerate(remaining):
-                min_d = min(self._fast_code_diversity(cand.solution, s.solution) for s in selected)
+                min_d = min(
+                    self._fast_code_diversity(cand.solution, s.solution)
+                    for s in selected
+                )
                 if min_d > best_div:
                     best_div = min_d
                     best_idx = i
@@ -661,7 +685,10 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         if self._is_better(program, current_best):
             old_id = self.best_program_id
             self.best_program_id = program.id
-            if "combined_score" in program.metrics and "combined_score" in current_best.metrics:
+            if (
+                "combined_score" in program.metrics
+                and "combined_score" in current_best.metrics
+            ):
                 logger.info(
                     "New best program %s replaces %s (%.4f -> %.4f)",
                     program.id,
@@ -684,7 +711,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
     # Population limit
     # ==================================================================
 
-    def _enforce_population_limit(self, exclude_program_id: Optional[str] = None) -> None:
+    def _enforce_population_limit(
+        self, exclude_program_id: Optional[str] = None
+    ) -> None:
         if len(self.programs) <= self.population_size:
             return
 
@@ -729,7 +758,11 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
             if best_id not in self.programs or best_id not in self.islands[i]:
                 self.island_best_programs[i] = None
                 # Recalculate
-                progs = [self.programs[pid] for pid in self.islands[i] if pid in self.programs]
+                progs = [
+                    self.programs[pid]
+                    for pid in self.islands[i]
+                    if pid in self.programs
+                ]
                 if progs:
                     self.island_best_programs[i] = max(
                         progs,
@@ -755,7 +788,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         for i, island in enumerate(self.islands):
             if not island:
                 continue
-            island_progs = [self.programs[pid] for pid in island if pid in self.programs]
+            island_progs = [
+                self.programs[pid] for pid in island if pid in self.programs
+            ]
             if not island_progs:
                 continue
 
@@ -780,7 +815,9 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
                 for target in targets:
                     # Skip if target island already has identical solution
                     target_progs = [
-                        self.programs[pid] for pid in self.islands[target] if pid in self.programs
+                        self.programs[pid]
+                        for pid in self.islands[target]
+                        if pid in self.programs
                     ]
                     if any(p.solution == migrant.solution for p in target_progs):
                         continue
@@ -841,7 +878,8 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         meta_path = os.path.join(path, "openevolve_native_metadata.json")
         if not os.path.exists(meta_path):
             logger.warning(
-                "No openevolve_native_metadata.json found; distributing " "programs round-robin"
+                "No openevolve_native_metadata.json found; distributing "
+                "programs round-robin"
             )
             self._distribute_programs_to_islands()
             return
@@ -854,11 +892,15 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         )
         saved_islands = meta.get("islands", [])
         self.archive = set(meta.get("archive", []))
-        self.island_best_programs = meta.get("island_best_programs", [None] * self.num_islands)
+        self.island_best_programs = meta.get(
+            "island_best_programs", [None] * self.num_islands
+        )
         self.current_island = meta.get("current_island", 0)
         self.island_generations = meta.get("island_generations", [0] * self.num_islands)
         self.last_migration_generation = meta.get("last_migration_generation", 0)
-        self.feature_stats = self._deserialize_feature_stats(meta.get("feature_stats", {}))
+        self.feature_stats = self._deserialize_feature_stats(
+            meta.get("feature_stats", {})
+        )
 
         self._reconstruct_islands(saved_islands)
         self._log_island_status()
@@ -945,11 +987,17 @@ class OpenEvolveNativeDatabase(ProgramDatabase):
         for i, island in enumerate(self.islands):
             progs = [self.programs[pid] for pid in island if pid in self.programs]
             if progs:
-                scores = [_get_fitness(p.metrics, self.feature_dimensions) for p in progs]
+                scores = [
+                    _get_fitness(p.metrics, self.feature_dimensions) for p in progs
+                ]
                 best, avg = max(scores), sum(scores) / len(scores)
             else:
                 best = avg = 0.0
-            cells = len(self.island_feature_maps[i]) if i < len(self.island_feature_maps) else 0
+            cells = (
+                len(self.island_feature_maps[i])
+                if i < len(self.island_feature_maps)
+                else 0
+            )
             gen = self.island_generations[i] if i < len(self.island_generations) else 0
             logger.info(
                 "Island %d: %d programs, %d cells, gen=%d, best=%.4f, avg=%.4f%s",

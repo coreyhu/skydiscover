@@ -135,7 +135,9 @@ def _extract_def_info(solution: str) -> Optional[Tuple[str, str, Optional[str]]]
     if cuda_kernel_match:
         name = cuda_kernel_match.group(1)
         kind = (
-            "kernel" if "__global__" in solution[: cuda_kernel_match.end()] else "device function"
+            "kernel"
+            if "__global__" in solution[: cuda_kernel_match.end()]
+            else "device function"
         )
         comment = _extract_c_comment(solution, cuda_kernel_match.start())
         return (kind, name, _truncate_comment(comment))
@@ -261,7 +263,9 @@ def _extract_docstring(solution: str, start_pos: int) -> Optional[str]:
         start_pos: Position to start searching from
     """
     remaining = solution[start_pos:]
-    docstring_match = re.search(r':\s*\n\s*("""|\'\'\')(.*?)("""|\'\'\')', remaining, re.DOTALL)
+    docstring_match = re.search(
+        r':\s*\n\s*("""|\'\'\')(.*?)("""|\'\'\')', remaining, re.DOTALL
+    )
 
     if docstring_match:
         docstring_content = docstring_match.group(2).strip()
@@ -317,11 +321,11 @@ def format_diff_summary(diff_blocks: List[Tuple[str, str]]) -> str:
             else:
                 desc = f"Modified {kind} `{name}` ({len(search_lines)}→{len(replace_lines)} lines)"
 
-            summary.append(f"Change {i+1}: {desc}")
+            summary.append(f"Change {i + 1}: {desc}")
         elif len(search_lines) == 1 and len(replace_lines) == 1:
             # Single line change - show the actual change
             summary.append(
-                f"Change {i+1}: '{search_lines[0].strip()}' → '{replace_lines[0].strip()}'"
+                f"Change {i + 1}: '{search_lines[0].strip()}' → '{replace_lines[0].strip()}'"
             )
         else:
             # Fallback: show first non-empty line as context
@@ -330,11 +334,11 @@ def format_diff_summary(diff_blocks: List[Tuple[str, str]]) -> str:
 
             if first_old and first_new:
                 summary.append(
-                    f"Change {i+1}: Near `{first_old[:50]}...` ({len(search_lines)}→{len(replace_lines)} lines)"
+                    f"Change {i + 1}: Near `{first_old[:50]}...` ({len(search_lines)}→{len(replace_lines)} lines)"
                 )
             else:
                 summary.append(
-                    f"Change {i+1}: Replace {len(search_lines)} lines with {len(replace_lines)} lines"
+                    f"Change {i + 1}: Replace {len(search_lines)} lines with {len(replace_lines)} lines"
                 )
 
     return "\n".join(summary)

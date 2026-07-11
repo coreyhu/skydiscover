@@ -120,7 +120,9 @@ def compute_proxy_score(
     return get_score(metrics)
 
 
-def format_improvement(parent_metrics: Dict[str, Any], child_metrics: Dict[str, Any]) -> str:
+def format_improvement(
+    parent_metrics: Dict[str, Any], child_metrics: Dict[str, Any]
+) -> str:
     """Format the per-metric delta between parent and child for logging."""
     if not parent_metrics or not child_metrics:
         return ""

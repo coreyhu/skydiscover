@@ -24,7 +24,10 @@ class TestRepoRootResolution:
     def _vog_path(self):
         return (
             Path(__file__).resolve().parent.parent.parent
-            / "skydiscover" / "search" / "evox" / "utils"
+            / "skydiscover"
+            / "search"
+            / "evox"
+            / "utils"
             / "variation_operator_generator.py"
         )
 

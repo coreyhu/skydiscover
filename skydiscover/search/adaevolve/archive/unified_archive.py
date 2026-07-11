@@ -160,7 +160,9 @@ class UnifiedArchive:
             )
             return True
 
-        logger.debug(f"Rejected {program.id[:8]} " f"(score {new_score:.3f} <= {old_score:.3f})")
+        logger.debug(
+            f"Rejected {program.id[:8]} (score {new_score:.3f} <= {old_score:.3f})"
+        )
         return False
 
     def _track_genealogy(self, program: Program) -> None:
@@ -247,7 +249,9 @@ class UnifiedArchive:
         self.diversity.update(programs)
 
         # Compute fitness ranks (higher fitness = higher rank)
-        fitness_sorted = sorted(programs, key=lambda p: self._get_fitness(p), reverse=True)
+        fitness_sorted = sorted(
+            programs, key=lambda p: self._get_fitness(p), reverse=True
+        )
         self._fitness_ranks = {p.id: i for i, p in enumerate(fitness_sorted)}
 
         # Compute Pareto ranking on explicit objectives (no-op when unconfigured)
@@ -267,7 +271,9 @@ class UnifiedArchive:
         self._dominated_flags = {}
 
         # Compute novelty scores (O(n²) but used for diversity-based sampling)
-        self._novelty_scores = {p.id: self._compute_novelty(p, programs) for p in programs}
+        self._novelty_scores = {
+            p.id: self._compute_novelty(p, programs) for p in programs
+        }
 
         # Compute elite scores
         self._elite_scores = {}
@@ -308,7 +314,9 @@ class UnifiedArchive:
             )
 
         # No Pareto objectives: redistribute pareto_weight to fitness
-        effective_fitness_weight = self.config.fitness_weight + self.config.pareto_weight
+        effective_fitness_weight = (
+            self.config.fitness_weight + self.config.pareto_weight
+        )
         return (
             effective_fitness_weight * fitness_percentile
             + self.config.novelty_weight * novelty_percentile
@@ -358,7 +366,9 @@ class UnifiedArchive:
         if use_pareto:
             new_vec = self._get_objective_vector(program)
             dominated_by = sum(
-                1 for p in programs if self._dominates(self._get_objective_vector(p), new_vec)
+                1
+                for p in programs
+                if self._dominates(self._get_objective_vector(p), new_vec)
             )
             pareto_percentile = 1.0 - (dominated_by / max(n, 1))
             pareto_percentile = max(0.0, min(1.0, pareto_percentile))
@@ -370,7 +380,9 @@ class UnifiedArchive:
             )
 
         # No Pareto objectives: redistribute pareto_weight to fitness
-        effective_fitness_weight = self.config.fitness_weight + self.config.pareto_weight
+        effective_fitness_weight = (
+            self.config.fitness_weight + self.config.pareto_weight
+        )
         return (
             effective_fitness_weight * fitness_percentile
             + self.config.novelty_weight * novelty_percentile
@@ -487,13 +499,16 @@ class UnifiedArchive:
                 crowding[sorted_layer[0]] = float("inf")
                 crowding[sorted_layer[-1]] = float("inf")
 
-                obj_range = obj_vectors[sorted_layer[-1]][m] - obj_vectors[sorted_layer[0]][m]
+                obj_range = (
+                    obj_vectors[sorted_layer[-1]][m] - obj_vectors[sorted_layer[0]][m]
+                )
                 if obj_range < 1e-10:
                     continue
 
                 for i in range(1, len(sorted_layer) - 1):
                     crowding[sorted_layer[i]] += (
-                        obj_vectors[sorted_layer[i + 1]][m] - obj_vectors[sorted_layer[i - 1]][m]
+                        obj_vectors[sorted_layer[i + 1]][m]
+                        - obj_vectors[sorted_layer[i - 1]][m]
                     ) / obj_range
 
         self._crowding_distances = crowding
@@ -548,7 +563,9 @@ class UnifiedArchive:
             )
 
         # Prefer combined_score as the canonical scalar fallback.
-        normalized = self._normalize_metric_value("combined_score", metrics.get("combined_score"))
+        normalized = self._normalize_metric_value(
+            "combined_score", metrics.get("combined_score")
+        )
         if normalized is not None:
             return normalized
 
@@ -604,14 +621,17 @@ class UnifiedArchive:
         if self._elite_scores:
             elite_count = max(1, int(len(self._programs) * self.config.elite_ratio))
             sorted_ids = sorted(
-                self._elite_scores.keys(), key=lambda pid: self._elite_scores[pid], reverse=True
+                self._elite_scores.keys(),
+                key=lambda pid: self._elite_scores[pid],
+                reverse=True,
             )
             protected.update(sorted_ids[:elite_count])
 
         # CRITICAL: Always protect the best program by fitness
         if self._programs:
             best_fitness_id = max(
-                self._programs.keys(), key=lambda pid: self._get_fitness(self._programs[pid])
+                self._programs.keys(),
+                key=lambda pid: self._get_fitness(self._programs[pid]),
             )
             protected.add(best_fitness_id)
 
@@ -655,7 +675,9 @@ class UnifiedArchive:
 
         elif mode == "exploration":
             # Sample proportional to novelty
-            novelties = [max(self._novelty_scores.get(p.id, 0.0), 0.001) for p in programs]
+            novelties = [
+                max(self._novelty_scores.get(p.id, 0.0), 0.001) for p in programs
+            ]
             total = sum(novelties)
             if total <= 0:
                 return random.choice(programs)

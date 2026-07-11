@@ -178,7 +178,9 @@ class AdaEvolveController(DiscoveryController):
             stats = self.database.get_comprehensive_iteration_stats(
                 iteration=iteration,
                 sampling_mode=(
-                    sampling_mode if sampling_mode is not None else self._last_sampling_mode
+                    sampling_mode
+                    if sampling_mode is not None
+                    else self._last_sampling_mode
                 ),
                 sampling_intensity=(
                     sampling_intensity
@@ -261,7 +263,9 @@ class AdaEvolveController(DiscoveryController):
 
         # Log final summary and stats file location
         if self._iteration_stats_log_path:
-            logger.info(f"AdaEvolve iteration stats saved to: {self._iteration_stats_log_path}")
+            logger.info(
+                f"AdaEvolve iteration stats saved to: {self._iteration_stats_log_path}"
+            )
 
         return self.database.get_best_program()
 
@@ -303,7 +307,10 @@ class AdaEvolveController(DiscoveryController):
 
         # Check for global paradigm stagnation
         # Use database flag directly to stay in sync after checkpoint load
-        if self.database.use_paradigm_breakthrough and self.database.is_paradigm_stagnating():
+        if (
+            self.database.use_paradigm_breakthrough
+            and self.database.is_paradigm_stagnating()
+        ):
             await self._generate_paradigms_if_needed()
 
         result = await self._run_normal_step(iteration)
@@ -345,7 +352,9 @@ class AdaEvolveController(DiscoveryController):
         if self.database.has_active_paradigm():
             return  # Already have paradigms to use
 
-        logger.info("Global paradigm stagnation detected, generating breakthrough ideas...")
+        logger.info(
+            "Global paradigm stagnation detected, generating breakthrough ideas..."
+        )
 
         # Get current best program for context
         best_program = self.database.get_best_program()
@@ -444,11 +453,17 @@ class AdaEvolveController(DiscoveryController):
 
         # Check for new best
         if self.database.is_multiobjective_enabled():
-            pareto_front_ids = {program.id for program in self.database.get_pareto_front()}
+            pareto_front_ids = {
+                program.id for program in self.database.get_pareto_front()
+            }
             if child.id in pareto_front_ids:
-                logger.info(f"Program entered the global Pareto front at iteration {iteration}")
+                logger.info(
+                    f"Program entered the global Pareto front at iteration {iteration}"
+                )
             if self.database.best_program_id == child.id:
-                logger.info(f"New representative Pareto solution found at iteration {iteration}")
+                logger.info(
+                    f"New representative Pareto solution found at iteration {iteration}"
+                )
         elif self.database.best_program_id == child.id:
             logger.info(f"New best solution found at iteration {iteration}")
 
@@ -493,14 +508,16 @@ class AdaEvolveController(DiscoveryController):
             parent = list(parent_dict.values())[0]
 
             # Read sampling mode stashed by database.sample()
-            sampling_mode = getattr(self.database, "_last_sampling_mode", None) or "balanced"
+            sampling_mode = (
+                getattr(self.database, "_last_sampling_mode", None) or "balanced"
+            )
 
             # Capture sampling mode and intensity for logging
             self._last_sampling_mode = sampling_mode
             current_island = self.database.current_island
             if self.database.use_adaptive_search:
-                self._last_sampling_intensity = self.database.adapter.get_search_intensity(
-                    current_island
+                self._last_sampling_intensity = (
+                    self.database.adapter.get_search_intensity(current_island)
                 )
             else:
                 self._last_sampling_intensity = self.database.fixed_intensity
@@ -553,7 +570,9 @@ class AdaEvolveController(DiscoveryController):
             # Build tracking info for child program
             parent_info = (parent_label, parent.id)
             context_info = [
-                (label, p.id) for label, programs in context_programs_dict.items() for p in programs
+                (label, p.id)
+                for label, programs in context_programs_dict.items()
+                for p in programs
             ]
             context_program_ids = [
                 p.id for programs in context_programs_dict.values() for p in programs
@@ -565,7 +584,9 @@ class AdaEvolveController(DiscoveryController):
                 feedback = self.feedback_reader.read()
                 if feedback:
                     prompt = self.feedback_reader.apply_feedback(prompt)
-                    self.feedback_reader.log_usage(iteration, feedback, self.feedback_reader.mode)
+                    self.feedback_reader.log_usage(
+                        iteration, feedback, self.feedback_reader.mode
+                    )
 
             # Generate and evaluate
             return await self._execute_generation(
@@ -653,16 +674,22 @@ class AdaEvolveController(DiscoveryController):
             changes = "Full rewrite"
 
         if not child_solution:
-            return SerializableResult(error="No valid solution in response", iteration=iteration)
+            return SerializableResult(
+                error="No valid solution in response", iteration=iteration
+            )
 
         # Evaluate
         try:
-            eval_input = image_path if self.config.language == "image" else child_solution
+            eval_input = (
+                image_path if self.config.language == "image" else child_solution
+            )
             eval_start = time.time()
             eval_result = await self.evaluator.evaluate_program(eval_input, child_id)
             eval_time = time.time() - eval_start
         except Exception as e:
-            return SerializableResult(error=f"Evaluation error: {e}", iteration=iteration)
+            return SerializableResult(
+                error=f"Evaluation error: {e}", iteration=iteration
+            )
 
         metrics = eval_result.metrics
         artifacts = eval_result.artifacts
@@ -677,12 +704,18 @@ class AdaEvolveController(DiscoveryController):
             )
         ):
             error_msg = (
-                (metrics.get("error") if isinstance(metrics.get("error"), str) else None)
+                (
+                    metrics.get("error")
+                    if isinstance(metrics.get("error"), str)
+                    else None
+                )
                 or (artifacts or {}).get("error")
                 or metrics.get("error_message")
                 or "Evaluation failed"
             )
-            return SerializableResult(error=f"Eval failure: {error_msg}", iteration=iteration)
+            return SerializableResult(
+                error=f"Eval failure: {error_msg}", iteration=iteration
+            )
 
         # Extract image_path from evaluator metrics (non-image mode fallback)
         if not image_path:

@@ -28,7 +28,9 @@ def verify_c3_solution(f_values: np.ndarray, c3_achieved: float, n_points: int):
     """Verify the solution for the C3 UPPER BOUND optimization."""
 
     if f_values.shape != (n_points,):
-        raise ValueError(f"Expected function values shape {(n_points,)}. Got {f_values.shape}.")
+        raise ValueError(
+            f"Expected function values shape {(n_points,)}. Got {f_values.shape}."
+        )
 
     # Recompute C3 using NumPy to verify
     dx = 0.5 / n_points

@@ -40,7 +40,9 @@ class LLMJudge:
         try:
             tm = self.context_builder.template_manager
             eval_sys = self.context_builder.config.evaluator_system_message
-            system_msg = tm.get_template(eval_sys) if eval_sys in tm.templates else eval_sys
+            system_msg = (
+                tm.get_template(eval_sys) if eval_sys in tm.templates else eval_sys
+            )
             user_msg = tm.get_template("evaluator_user_message").format(
                 current_program=program_solution
             )

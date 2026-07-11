@@ -53,7 +53,9 @@ class ParadigmTracker:
     # Improvement Recording
     # =========================================================================
 
-    def record_improvement(self, improved: bool, current_best_score: float = 0.0) -> None:
+    def record_improvement(
+        self, improved: bool, current_best_score: float = 0.0
+    ) -> None:
         """
         Record binary improvement (1.0 if global best changed, else 0.0).
 
@@ -72,7 +74,10 @@ class ParadigmTracker:
             self.improvement_history.pop(0)
 
         # Track best score during paradigm usage for outcome evaluation
-        if self.active_paradigms and current_best_score > self.best_score_during_paradigm:
+        if (
+            self.active_paradigms
+            and current_best_score > self.best_score_during_paradigm
+        ):
             self.best_score_during_paradigm = current_best_score
 
     def get_improvement_rate(self) -> float:
@@ -170,7 +175,9 @@ class ParadigmTracker:
     # Paradigm Management
     # =========================================================================
 
-    def set_paradigms(self, paradigms: List[Dict[str, Any]], current_best_score: float) -> None:
+    def set_paradigms(
+        self, paradigms: List[Dict[str, Any]], current_best_score: float
+    ) -> None:
         """
         Set new paradigms from generator.
 
@@ -190,7 +197,9 @@ class ParadigmTracker:
         self.best_score_at_paradigm_gen = current_best_score
         self.best_score_during_paradigm = current_best_score
 
-        logger.info(f"Set {len(paradigms)} new paradigms (best score: {current_best_score:.6f})")
+        logger.info(
+            f"Set {len(paradigms)} new paradigms (best score: {current_best_score:.6f})"
+        )
 
     def clear_paradigms(self) -> None:
         """
@@ -221,7 +230,9 @@ class ParadigmTracker:
 
         # Look for a paradigm that isn't exhausted
         for i in range(len(self.active_paradigms)):
-            next_idx = (self.current_paradigm_index + 1 + i) % len(self.active_paradigms)
+            next_idx = (self.current_paradigm_index + 1 + i) % len(
+                self.active_paradigms
+            )
             if self.paradigm_usage_counts.get(next_idx, 0) < self.max_paradigm_uses:
                 self.current_paradigm_index = next_idx
                 logger.debug(f"Rotated to paradigm {next_idx}")
@@ -242,7 +253,9 @@ class ParadigmTracker:
             return
 
         # Calculate improvement achieved during this paradigm batch
-        score_improvement = self.best_score_during_paradigm - self.best_score_at_paradigm_gen
+        score_improvement = (
+            self.best_score_during_paradigm - self.best_score_at_paradigm_gen
+        )
 
         for idx, paradigm in enumerate(self.active_paradigms):
             uses = self.paradigm_usage_counts.get(idx, 0)
@@ -272,7 +285,9 @@ class ParadigmTracker:
                 uses = self.paradigm_usage_counts.get(idx, 0)
                 if uses > 0:
                     outcome = "SUCCESS" if score_improvement > 0.001 else "FAILED"
-                    logger.info(f"  [{outcome}] {paradigm.get('idea', 'N/A')} (uses: {uses})")
+                    logger.info(
+                        f"  [{outcome}] {paradigm.get('idea', 'N/A')} (uses: {uses})"
+                    )
 
     # =========================================================================
     # Feedback for Generator
@@ -299,7 +314,9 @@ class ParadigmTracker:
             improvement = p.get("score_improvement", 0.0)
 
             # Format: "OUTCOME: approach_type - idea (improvement: +/-X.XXXX)"
-            result.append(f"{outcome}: {approach} - {idea} (improvement: {improvement:+.4f})")
+            result.append(
+                f"{outcome}: {approach} - {idea} (improvement: {improvement:+.4f})"
+            )
 
         return result
 

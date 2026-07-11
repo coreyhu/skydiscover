@@ -93,7 +93,12 @@ class MonitorServer:
     Runs in a daemon thread with its own asyncio event loop.
     """
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 8765, max_solution_length: int = 10000):
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 8765,
+        max_solution_length: int = 10000,
+    ):
         self.host = host
         self.port = port
         self.max_solution_length = max_solution_length
@@ -198,7 +203,9 @@ class MonitorServer:
         self._summary_api_base = api_base.rstrip("/")
         self._summary_top_k = top_k
         self._summary_interval = interval
-        self._summary_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="summary")
+        self._summary_executor = ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="summary"
+        )
 
         # Set initial placeholder text so UI knows summary is ready
         if not self._summary_text:
@@ -273,7 +280,9 @@ class MonitorServer:
                 if pending:
                     for t in pending:
                         t.cancel()
-                    self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                    self._loop.run_until_complete(
+                        asyncio.gather(*pending, return_exceptions=True)
+                    )
             except Exception:
                 logger.debug("Error cancelling tasks during stop", exc_info=True)
             try:
@@ -286,7 +295,9 @@ class MonitorServer:
         port = self.port
         for attempt in range(10):
             try:
-                server = await asyncio.start_server(self._handle_connection, self.host, port)
+                server = await asyncio.start_server(
+                    self._handle_connection, self.host, port
+                )
                 break
             except OSError:
                 if attempt == 9:
@@ -316,13 +327,17 @@ class MonitorServer:
         try:
             # Read HTTP request line + headers
             raw_headers: Dict[str, str] = {}
-            request_line = (await reader.readline()).decode("utf-8", errors="replace").strip()
+            request_line = (
+                (await reader.readline()).decode("utf-8", errors="replace").strip()
+            )
             if not request_line:
                 writer.close()
                 return
 
             while True:
-                line = (await reader.readline()).decode("utf-8", errors="replace").strip()
+                line = (
+                    (await reader.readline()).decode("utf-8", errors="replace").strip()
+                )
                 if not line:
                     break
                 if ":" in line:
@@ -573,7 +588,9 @@ class MonitorServer:
 
             # Strip full_solution from broadcast (clients request on demand)
             broadcast = {
-                k: v for k, v in event.items() if k not in ("full_solution", "parent_full_solution")
+                k: v
+                for k, v in event.items()
+                if k not in ("full_solution", "parent_full_solution")
             }
             # Include current human feedback status in program events
             if etype == "new_program" and self._feedback_reader:
@@ -613,9 +630,13 @@ class MonitorServer:
         while not self._stop_event.is_set():
             await asyncio.sleep(5)
             if self._clients:
-                await self._broadcast(json.dumps({"type": "heartbeat", "timestamp": time.time()}))
+                await self._broadcast(
+                    json.dumps({"type": "heartbeat", "timestamp": time.time()})
+                )
 
-    async def _generate_program_summary(self, writer: asyncio.StreamWriter, pid: str) -> None:
+    async def _generate_program_summary(
+        self, writer: asyncio.StreamWriter, pid: str
+    ) -> None:
         """Generate a crisp LLM summary of what changed in a single program."""
         # Return cached if available
         if pid in self._program_summary_cache:
@@ -714,7 +735,9 @@ class MonitorServer:
 
         # Ensure executor exists
         if not self._summary_executor:
-            self._summary_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="summary")
+            self._summary_executor = ThreadPoolExecutor(
+                max_workers=1, thread_name_prefix="summary"
+            )
 
         # Run LLM call in executor
         result = ""
@@ -776,7 +799,9 @@ class MonitorServer:
 
         # Ensure executor exists
         if not self._summary_executor:
-            self._summary_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="summary")
+            self._summary_executor = ThreadPoolExecutor(
+                max_workers=1, thread_name_prefix="summary"
+            )
 
         self._summary_generating = True
         self._summary_last_program_count = len(self._programs)
@@ -797,7 +822,9 @@ class MonitorServer:
             # Build the prompt data from current programs
             top_programs = self._get_top_k_programs()
             if not top_programs:
-                self._summary_text = "No scored programs yet. Run some iterations first."
+                self._summary_text = (
+                    "No scored programs yet. Run some iterations first."
+                )
                 logger.info("AI summary skipped: no scored programs")
             else:
                 prompt_data = self._build_summary_prompt(top_programs)
@@ -886,7 +913,9 @@ class MonitorServer:
         if total_with_parent > 0:
             hit_rate = improvements / total_with_parent * 100
             avg_gain = (
-                sum(improvement_deltas) / len(improvement_deltas) if improvement_deltas else 0
+                sum(improvement_deltas) / len(improvement_deltas)
+                if improvement_deltas
+                else 0
             )
             lines.append("=== Improvement Rate ===")
             lines.append(
@@ -946,12 +975,14 @@ class MonitorServer:
                 scores = islands[isl]
                 lines.append(
                     f"  Island {isl}: {len(scores)} programs, "
-                    f"best={max(scores):.4f}, avg={sum(scores)/len(scores):.4f}"
+                    f"best={max(scores):.4f}, avg={sum(scores) / len(scores):.4f}"
                 )
 
         return "\n".join(lines)
 
-    def _build_summary_prompt(self, top_programs: List[Dict[str, Any]]) -> Dict[str, str]:
+    def _build_summary_prompt(
+        self, top_programs: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
         """Build the system + user prompt for the summary LLM call."""
         system = (
             "You are an expert analyst monitoring a solution discovery process. "
@@ -1002,7 +1033,9 @@ class MonitorServer:
             # Truncate code to keep prompt reasonable
             if len(code) > 2000:
                 code = code[:2000] + "\n... (truncated)"
-            island_str = f", island={p.get('island')}" if p.get("island") is not None else ""
+            island_str = (
+                f", island={p.get('island')}" if p.get("island") is not None else ""
+            )
             parts.append(
                 f"\n--- Top Program #{i} ---\n"
                 f"ID: {pid}\n"

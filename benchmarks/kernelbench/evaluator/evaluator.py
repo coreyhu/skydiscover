@@ -73,20 +73,31 @@ def evaluate(program_path: str):
             program_content = f.read()
 
         is_triton = bool(
-            re.search(r"^(import triton|from triton)", program_content, flags=re.MULTILINE)
+            re.search(
+                r"^(import triton|from triton)", program_content, flags=re.MULTILINE
+            )
         )
 
         # Create a temporary file with ModelNew wrapper
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as tmp_file:
             # Replace class Model with class ModelNew (if not already ModelNew)
             converted_content = program_content
             if "class ModelNew" not in converted_content:
                 converted_content = re.sub(
-                    r"^class Model(?=[(:])", "class ModelNew", converted_content, flags=re.MULTILINE
+                    r"^class Model(?=[(:])",
+                    "class ModelNew",
+                    converted_content,
+                    flags=re.MULTILINE,
                 )
                 # Fix super() calls - use modern Python 3 super() without arguments
-                converted_content = re.sub(r"super\(Model,\s*self\)", "super()", converted_content)
-                converted_content = re.sub(r"super\(Model,\s*cls\)", "super()", converted_content)
+                converted_content = re.sub(
+                    r"super\(Model,\s*self\)", "super()", converted_content
+                )
+                converted_content = re.sub(
+                    r"super\(Model,\s*cls\)", "super()", converted_content
+                )
 
             tmp_file.write(converted_content)
             kernel_src_path = tmp_file.name
@@ -120,7 +131,9 @@ def evaluate(program_path: str):
             env = os.environ.copy()
 
             # Run the evaluation from the evaluator directory
-            print(f"[INFO] Running evaluation command: {' '.join(cmd)}", file=sys.stderr)
+            print(
+                f"[INFO] Running evaluation command: {' '.join(cmd)}", file=sys.stderr
+            )
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -142,7 +155,8 @@ def evaluate(program_path: str):
 
         if result.returncode != 0:
             print(
-                f"[ERROR] Evaluation failed with return code {result.returncode}", file=sys.stderr
+                f"[ERROR] Evaluation failed with return code {result.returncode}",
+                file=sys.stderr,
             )
             print(f"[ERROR] stdout: {stdout}", file=sys.stderr)
             print(f"[ERROR] stderr: {stderr}", file=sys.stderr)

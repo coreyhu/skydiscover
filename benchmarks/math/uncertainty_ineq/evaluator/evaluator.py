@@ -52,7 +52,9 @@ def _construct_P_with_forced_zero(coeffs: np.ndarray) -> sp.Expr:
 
 def _largest_positive_root_of_P_over_x2(P: sp.Expr) -> float:
     # P is even and has P(0)=0; divide by x^2 and find the largest positive real root.
-    gq = sp.exquo(P, x**2)  # exact division (should divide cleanly if multiplicity >= 2)
+    gq = sp.exquo(
+        P, x**2
+    )  # exact division (should divide cleanly if multiplicity >= 2)
     roots = sp.real_roots(gq, x)
     if not roots:
         raise ValueError("No real roots for P(x)/x^2.")
@@ -85,15 +87,23 @@ def compute_c4_and_rmax(input_coeffs: np.ndarray):
 
 
 def verify_c4_solution_strict(
-    user_coeffs: np.ndarray, reported_c4: float, reported_rmax: float, atol=1e-9, rtol=1e-9
+    user_coeffs: np.ndarray,
+    reported_c4: float,
+    reported_rmax: float,
+    atol=1e-9,
+    rtol=1e-9,
 ):
     c4, rmax = compute_c4_and_rmax(np.asarray(user_coeffs, dtype=float))
 
     if not np.isclose(c4, reported_c4, rtol=rtol, atol=atol):
-        raise ValueError(f"C4 mismatch: reported {reported_c4:.12f}, recomputed {c4:.12f}")
+        raise ValueError(
+            f"C4 mismatch: reported {reported_c4:.12f}, recomputed {c4:.12f}"
+        )
 
     if not np.isclose(rmax, reported_rmax, rtol=rtol, atol=atol):
-        raise ValueError(f"r_max mismatch: reported {reported_rmax:.12f}, recomputed {rmax:.12f}")
+        raise ValueError(
+            f"r_max mismatch: reported {reported_rmax:.12f}, recomputed {rmax:.12f}"
+        )
 
     return c4, rmax
 

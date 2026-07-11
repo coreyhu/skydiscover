@@ -31,7 +31,9 @@ class LLMPool:
         self.weights = [w / total for w in self.weights]
 
         self.models = [
-            model_cfg.init_client(model_cfg) if model_cfg.init_client else OpenAILLM(model_cfg)
+            model_cfg.init_client(model_cfg)
+            if model_cfg.init_client
+            else OpenAILLM(model_cfg)
             for model_cfg in models_cfg
         ]
         self.random_state = random.Random()
@@ -42,7 +44,9 @@ class LLMPool:
             if not hasattr(logger, "_logged_pools"):
                 logger._logged_pools = set()
             if pool_key not in logger._logged_pools:
-                parts = ", ".join(f"{c.name}={w:.2f}" for c, w in zip(models_cfg, self.weights))
+                parts = ", ".join(
+                    f"{c.name}={w:.2f}" for c, w in zip(models_cfg, self.weights)
+                )
                 logger.info(f"Pool weights: {parts}")
                 logger._logged_pools.add(pool_key)
 
@@ -50,7 +54,9 @@ class LLMPool:
         """
         Simple weighted sampling mechanism. Override this to implement a more complex sampling mechanism.
         """
-        idx = self.random_state.choices(range(len(self.models)), weights=self.weights, k=1)[0]
+        idx = self.random_state.choices(
+            range(len(self.models)), weights=self.weights, k=1
+        )[0]
         return self.models[idx]
 
     async def generate(
@@ -65,5 +71,8 @@ class LLMPool:
     ) -> List[LLMResponse]:
         """Generate using all models concurrently."""
         return await asyncio.gather(
-            *(model.generate(system_message, messages, **kwargs) for model in self.models)
+            *(
+                model.generate(system_message, messages, **kwargs)
+                for model in self.models
+            )
         )

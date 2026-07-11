@@ -26,7 +26,10 @@ logger = logging.getLogger(__name__)
 
 
 def _make_gepa_evaluator(
-    evaluator_path: str, monitor_callback=None, solution_prefix: str = "", solution_suffix: str = ""
+    evaluator_path: str,
+    monitor_callback=None,
+    solution_prefix: str = "",
+    solution_suffix: str = "",
 ):
     """
     Wrap a SkyDiscover-style evaluator (evaluate(program_path) -> dict)
@@ -134,7 +137,12 @@ def _ensure_litellm_api_key(config: Config):
 
 
 def _build_gepa_config(config: Config, iterations: int):
-    from gepa.optimize_anything import EngineConfig, GEPAConfig, RefinerConfig, ReflectionConfig
+    from gepa.optimize_anything import (
+        EngineConfig,
+        GEPAConfig,
+        RefinerConfig,
+        ReflectionConfig,
+    )
 
     # Power-user escape hatch
     ext = getattr(config, "external_config", None)
@@ -258,19 +266,25 @@ async def run(
             if feedback_reader.mode == "replace":
                 system_prompt = feedback
             else:
-                system_prompt = (system_prompt or "") + "\n\n## Human Guidance\n" + feedback
+                system_prompt = (
+                    (system_prompt or "") + "\n\n## Human Guidance\n" + feedback
+                )
             feedback_reader.set_current_prompt(system_prompt)
             logger.info(
                 f"Human feedback applied to GEPA background ({len(feedback)} chars, mode={feedback_reader.mode})"
             )
-            logger.info("Note: GEPA runs synchronously; feedback is applied once at startup.")
+            logger.info(
+                "Note: GEPA runs synchronously; feedback is applied once at startup."
+            )
 
     # Log to file so screen output is captured
     log_dir = os.path.join(output_dir, "logs")
     os.makedirs(log_dir, exist_ok=True)
     from datetime import datetime
 
-    log_file = os.path.join(log_dir, f"gepa_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    log_file = os.path.join(
+        log_dir, f"gepa_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    )
     file_handler = logging.FileHandler(log_file)
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -334,7 +348,10 @@ async def run(
         best_program=best_program,
         best_score=best_score,
         best_solution=best_solution,
-        metrics={"combined_score": best_score, "total_candidates": result.num_candidates},
+        metrics={
+            "combined_score": best_score,
+            "total_candidates": result.num_candidates,
+        },
         output_dir=output_dir,
         initial_score=initial_score,
     )

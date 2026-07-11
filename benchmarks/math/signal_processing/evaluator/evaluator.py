@@ -176,7 +176,8 @@ def calculate_false_reversal_penalty(filtered_signal, clean_signal, window_size)
 
         # Check if there's a corresponding trend change in clean signal
         clean_change = (
-            np.sign(clean_diffs[i]) != np.sign(clean_diffs[i - 1]) and clean_diffs[i - 1] != 0
+            np.sign(clean_diffs[i]) != np.sign(clean_diffs[i - 1])
+            and clean_diffs[i - 1] != 0
         )
 
         # Count as false reversal if filtered has change but clean doesn't
@@ -205,7 +206,10 @@ def calculate_composite_score(S, L_recent, L_avg, R, alpha=[0.3, 0.2, 0.2, 0.3])
 
     # Calculate weighted penalty
     penalty = (
-        alpha[0] * S_norm + alpha[1] * L_recent_norm + alpha[2] * L_avg_norm + alpha[3] * R_norm
+        alpha[0] * S_norm
+        + alpha[1] * L_recent_norm
+        + alpha[2] * L_avg_norm
+        + alpha[3] * R_norm
     )
 
     # Convert to maximization score (higher is better)
@@ -266,6 +270,7 @@ def generate_test_signals(num_signals=5):
 # Input: run_signal_processing(noisy_signal, window_size) — full signal array and window size.
 # Scoring: composite of smoothness, tracking accuracy, correlation, and noise reduction.
 
+
 def evaluate(program_path):
     """
     Main evaluation function that tests the signal processing algorithm
@@ -279,7 +284,11 @@ def evaluate(program_path):
 
         # Check if required function exists
         if not hasattr(program, "run_signal_processing"):
-            return {"combined_score": 0.0, "composite_score": 0.0, "error": "Missing run_signal_processing function"}
+            return {
+                "combined_score": 0.0,
+                "composite_score": 0.0,
+                "error": "Missing run_signal_processing function",
+            }
 
         # Generate test signals
         test_signals = generate_test_signals(5)
@@ -329,9 +338,15 @@ def evaluate(program_path):
 
                 # Calculate all penalty components
                 S = calculate_slope_changes(filtered_signal)
-                L_recent = calculate_lag_error(filtered_signal, noisy_signal, window_size)
-                L_avg = calculate_average_tracking_error(filtered_signal, noisy_signal, window_size)
-                R = calculate_false_reversal_penalty(filtered_signal, clean_signal, window_size)
+                L_recent = calculate_lag_error(
+                    filtered_signal, noisy_signal, window_size
+                )
+                L_avg = calculate_average_tracking_error(
+                    filtered_signal, noisy_signal, window_size
+                )
+                R = calculate_false_reversal_penalty(
+                    filtered_signal, clean_signal, window_size
+                )
 
                 # Calculate composite score
                 composite_score = calculate_composite_score(S, L_recent, L_avg, R)
@@ -350,7 +365,9 @@ def evaluate(program_path):
                         corr_result = pearsonr(
                             filtered_signal[:min_length], aligned_clean[:min_length]
                         )
-                        correlation = corr_result[0] if not np.isnan(corr_result[0]) else 0.0
+                        correlation = (
+                            corr_result[0] if not np.isnan(corr_result[0]) else 0.0
+                        )
 
                     # Calculate noise reduction
                     aligned_noisy = noisy_signal[delay : delay + len(filtered_signal)]
@@ -359,9 +376,13 @@ def evaluate(program_path):
 
                     if min_length > 0:
                         noise_before = np.var(aligned_noisy - aligned_clean)
-                        noise_after = np.var(filtered_signal[:min_length] - aligned_clean)
+                        noise_after = np.var(
+                            filtered_signal[:min_length] - aligned_clean
+                        )
                         noise_reduction = (
-                            (noise_before - noise_after) / noise_before if noise_before > 0 else 0
+                            (noise_before - noise_after) / noise_before
+                            if noise_before > 0
+                            else 0
                         )
                         noise_reduction = max(0, noise_reduction)  # Ensure non-negative
 
@@ -438,7 +459,9 @@ def evaluate(program_path):
             overall_score = 0.0
 
         return {
-            "combined_score": safe_float(overall_score),  # Primary selection metric for SkyDiscover
+            "combined_score": safe_float(
+                overall_score
+            ),  # Primary selection metric for SkyDiscover
             "composite_score": safe_float(avg_composite_score),
             "overall_score": safe_float(overall_score),
             "slope_changes": safe_float(avg_slope_changes),
@@ -458,7 +481,12 @@ def evaluate(program_path):
     except Exception as e:
         print(f"Evaluation failed: {str(e)}")
         print(traceback.format_exc())
-        return {"combined_score": 0.0, "composite_score": 0.0, "overall_score": 0.0, "error": str(e)}
+        return {
+            "combined_score": 0.0,
+            "composite_score": 0.0,
+            "overall_score": 0.0,
+            "error": str(e),
+        }
 
 
 def evaluate_stage1(program_path):
@@ -473,7 +501,10 @@ def evaluate_stage1(program_path):
 
         # Check if required function exists
         if not hasattr(program, "run_signal_processing"):
-            return {"runs_successfully": 0.0, "error": "Missing run_signal_processing function"}
+            return {
+                "runs_successfully": 0.0,
+                "error": "Missing run_signal_processing function",
+            }
 
         # Generate a small test signal (consistent with evaluate() API)
         np.random.seed(42)

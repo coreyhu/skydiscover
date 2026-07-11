@@ -71,9 +71,13 @@ def create_evaluator(
     """
     path = config.evaluation_file or ""
     if _is_harbor_task(path):
-        return HarborEvaluator(path, config, max_concurrent=max_concurrent, env_vars=env_vars)
+        return HarborEvaluator(
+            path, config, max_concurrent=max_concurrent, env_vars=env_vars
+        )
     if _is_containerized(path):
         return ContainerizedEvaluator(
             path, config, max_concurrent=max_concurrent, env_vars=env_vars
         )
-    return Evaluator(config, llm_judge=llm_judge, max_concurrent=max_concurrent, env_vars=env_vars)
+    return Evaluator(
+        config, llm_judge=llm_judge, max_concurrent=max_concurrent, env_vars=env_vars
+    )

@@ -51,9 +51,13 @@ class TaskPool:
         _kwargs = kwargs_list if kwargs_list else [{} for _ in range(n)]
 
         if len(_args) != n:
-            raise ValueError(f"args_list length ({len(_args)}) must match coros length ({n})")
+            raise ValueError(
+                f"args_list length ({len(_args)}) must match coros length ({n})"
+            )
         if len(_kwargs) != n:
-            raise ValueError(f"kwargs_list length ({len(_kwargs)}) must match coros length ({n})")
+            raise ValueError(
+                f"kwargs_list length ({len(_kwargs)}) must match coros length ({n})"
+            )
 
         tasks = [
             self.create_task(coro, *args, **kwargs)

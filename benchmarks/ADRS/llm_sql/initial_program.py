@@ -26,24 +26,35 @@ class Evolved(Algorithm):
         self.col_stop = None
         self.base = 2000
 
-    def find_max_group_value(self, df: pd.DataFrame, value_counts: Dict, early_stop: int = 0) -> str:
+    def find_max_group_value(
+        self, df: pd.DataFrame, value_counts: Dict, early_stop: int = 0
+    ) -> str:
         # NOTE: recalculate value counts and length for each value
         value_counts = Counter(df.stack())
-        weighted_counts = {val: self.val_len[val] * (count - 1) for val, count in value_counts.items()}  # if count > 1
+        weighted_counts = {
+            val: self.val_len[val] * (count - 1) for val, count in value_counts.items()
+        }  # if count > 1
         if not weighted_counts:
             return None
-        max_group_val, max_weighted_count = max(weighted_counts.items(), key=lambda x: x[1])
+        max_group_val, max_weighted_count = max(
+            weighted_counts.items(), key=lambda x: x[1]
+        )
         if max_weighted_count < early_stop:
             return None
         return max_group_val
 
-    def reorder_columns_for_value(self, row, value, column_names, grouped_rows_len: int = 1):
+    def reorder_columns_for_value(
+        self, row, value, column_names, grouped_rows_len: int = 1
+    ):
         # cols_with_value will now use attribute access instead of indexing with row[]
         cols_with_value = []
         for idx, col in enumerate(column_names):
             if hasattr(row, col) and getattr(row, col) == value:
                 cols_with_value.append(col)
-            elif hasattr(row, col.replace(" ", "_")) and getattr(row, col.replace(" ", "_")) == value:
+            elif (
+                hasattr(row, col.replace(" ", "_"))
+                and getattr(row, col.replace(" ", "_")) == value
+            ):
                 cols_with_value.append(col)
             else:
                 attr_name = f"_{idx}"
@@ -69,18 +80,23 @@ class Evolved(Algorithm):
                             valid_dependent_cols.append(dep_col)
 
                 reordered_cols.extend([col] + valid_dependent_cols)
-            cols_without_value = [col for col in column_names if col not in reordered_cols]
+            cols_without_value = [
+                col for col in column_names if col not in reordered_cols
+            ]
             reordered_cols.extend(cols_without_value)
-            assert len(reordered_cols) == len(
-                column_names
-            ), f"Reordered cols len: {len(reordered_cols)}  Original cols len: {len(column_names)}"
+            assert len(reordered_cols) == len(column_names), (
+                f"Reordered cols len: {len(reordered_cols)}  Original cols len: {len(column_names)}"
+            )
             return [getattr(row, col) for col in reordered_cols], cols_with_value
         else:
             cols_without_value = []
             for idx, col in enumerate(column_names):
                 if hasattr(row, col) and getattr(row, col) != value:
                     cols_without_value.append(col)
-                elif hasattr(row, col.replace(" ", "_")) and getattr(row, col.replace(" ", "_")) != value:
+                elif (
+                    hasattr(row, col.replace(" ", "_"))
+                    and getattr(row, col.replace(" ", "_")) != value
+                ):
                     cols_without_value.append(col)
                 else:
                     # Handle some edge cases
@@ -89,9 +105,9 @@ class Evolved(Algorithm):
                         cols_without_value.append(attr_name)
 
             reordered_cols = cols_with_value + cols_without_value
-            assert len(reordered_cols) == len(
-                column_names
-            ), f"Reordered cols len: {len(reordered_cols)}  Original cols len: {len(column_names)}"
+            assert len(reordered_cols) == len(column_names), (
+                f"Reordered cols len: {len(reordered_cols)}  Original cols len: {len(column_names)}"
+            )
             return [getattr(row, col) for col in reordered_cols], cols_with_value
 
     def get_dependent_columns(self, col: str) -> List[str]:
@@ -103,7 +119,9 @@ class Evolved(Algorithm):
     def get_cached_dependent_columns(self, col: str) -> List[str]:
         return self.get_dependent_columns(col)
 
-    def fixed_reorder(self, df: pd.DataFrame, row_sort: bool = True) -> Tuple[pd.DataFrame, List[List[str]]]:
+    def fixed_reorder(
+        self, df: pd.DataFrame, row_sort: bool = True
+    ) -> Tuple[pd.DataFrame, List[List[str]]]:
         num_rows, column_stats = self.calculate_col_stats(df, enable_index=True)
         reordered_columns = [col for col, _, _, _ in column_stats]
         reordered_df = df[reordered_columns]
@@ -116,11 +134,19 @@ class Evolved(Algorithm):
 
         return reordered_df, column_orderings
 
-    def column_recursion(self, result_df, max_value, grouped_rows, row_stop, col_stop, early_stop):
+    def column_recursion(
+        self, result_df, max_value, grouped_rows, row_stop, col_stop, early_stop
+    ):
         cols_settled = []
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(self.reorder_columns_for_value, row, max_value, grouped_rows.columns.tolist(), len(grouped_rows))
+                executor.submit(
+                    self.reorder_columns_for_value,
+                    row,
+                    max_value,
+                    grouped_rows.columns.tolist(),
+                    len(grouped_rows),
+                )
                 for row in grouped_rows.itertuples(index=False)
             ]
             for i, future in enumerate(as_completed(futures)):
@@ -132,7 +158,9 @@ class Evolved(Algorithm):
         if not result_df.empty:
             # Group by the first column
             grouped_result_df = result_df.groupby(result_df.columns[0])
-            grouped_value_counts = Counter(grouped_rows.stack())  # this is still faster than updating from cached value counts
+            grouped_value_counts = Counter(
+                grouped_rows.stack()
+            )  # this is still faster than updating from cached value counts
 
             for _, group in grouped_result_df:
                 if group[group.columns[0]].iloc[0] != max_value:
@@ -142,11 +170,15 @@ class Evolved(Algorithm):
                 length_of_settle_cols = len(cols_settled)
 
                 if dependent_cols:
-                    assert length_of_settle_cols >= 1, f"Dependent columns should be no less than 1, but got {length_of_settle_cols}"
+                    assert length_of_settle_cols >= 1, (
+                        f"Dependent columns should be no less than 1, but got {length_of_settle_cols}"
+                    )
 
                     # test the first length_of_settle_cols columns, each column has nunique == 1
                     for col in group.columns[:length_of_settle_cols]:
-                        assert group[col].nunique() == 1, f"Column {col} should have nunique == 1, but got {group[col].nunique()}"
+                        assert group[col].nunique() == 1, (
+                            f"Column {col} should have nunique == 1, but got {group[col].nunique()}"
+                        )
 
                     # drop all the settled columns and reorder the rest
                     group_remainder = group.iloc[:, length_of_settle_cols:]
@@ -156,11 +188,17 @@ class Evolved(Algorithm):
                 grouped_remainder_value_counts = Counter(group_remainder.stack())
 
                 reordered_group_remainder, _ = self.recursive_reorder(
-                    group_remainder, grouped_remainder_value_counts, early_stop=early_stop, row_stop=row_stop, col_stop=col_stop + 1
+                    group_remainder,
+                    grouped_remainder_value_counts,
+                    early_stop=early_stop,
+                    row_stop=row_stop,
+                    col_stop=col_stop + 1,
                 )
                 # Update the group with the reordered columns
                 if dependent_cols:
-                    group.iloc[:, length_of_settle_cols:] = reordered_group_remainder.values
+                    group.iloc[:, length_of_settle_cols:] = (
+                        reordered_group_remainder.values
+                    )
                 else:
                     group.iloc[:, 1:] = reordered_group_remainder.values
 
@@ -205,49 +243,84 @@ class Evolved(Algorithm):
 
         result_df = pd.DataFrame(columns=df.columns)
 
-        reordered_remaining_rows = pd.DataFrame(columns=df.columns)  # Initialize empty dataframe first
+        reordered_remaining_rows = pd.DataFrame(
+            columns=df.columns
+        )  # Initialize empty dataframe first
 
         # Column Recursion
-        result_df, grouped_value_counts = self.column_recursion(result_df, max_value, grouped_rows, row_stop, col_stop, early_stop)
+        result_df, grouped_value_counts = self.column_recursion(
+            result_df, max_value, grouped_rows, row_stop, col_stop, early_stop
+        )
 
-        remaining_value_counts = value_counts - grouped_value_counts  # Approach 1 - update remaining value counts with subtraction
+        remaining_value_counts = (
+            value_counts - grouped_value_counts
+        )  # Approach 1 - update remaining value counts with subtraction
 
         # Row Recursion
         reordered_remaining_rows, _ = self.recursive_reorder(
-            remaining_rows, remaining_value_counts, early_stop=early_stop, row_stop=row_stop + 1, col_stop=col_stop
+            remaining_rows,
+            remaining_value_counts,
+            early_stop=early_stop,
+            row_stop=row_stop + 1,
+            col_stop=col_stop,
         )
         old_column_names = result_df.columns.tolist()
         result_cols_reset = result_df.reset_index(drop=True)
         result_rows_reset = reordered_remaining_rows.reset_index(drop=True)
-        final_result_df = pd.DataFrame(result_cols_reset.values.tolist() + result_rows_reset.values.tolist())
+        final_result_df = pd.DataFrame(
+            result_cols_reset.values.tolist() + result_rows_reset.values.tolist()
+        )
 
         if row_stop == 0 and col_stop == 0:
             final_result_df.columns = old_column_names
-            final_result_df.columns = final_result_df.columns.tolist()[:-1] + ["original_index"]
+            final_result_df.columns = final_result_df.columns.tolist()[:-1] + [
+                "original_index"
+            ]
 
         return final_result_df, []
 
-    def recursive_split_and_reorder(self, df: pd.DataFrame, original_columns: List[str] = None, early_stop: int = 0):
+    def recursive_split_and_reorder(
+        self, df: pd.DataFrame, original_columns: List[str] = None, early_stop: int = 0
+    ):
         """
         Recursively split the DataFrame into halves until the size is <= 1000, then apply the recursive reorder function.
         """
         if len(df) <= self.base:
             initial_value_counts = Counter(df.stack())
-            return self.recursive_reorder(df, initial_value_counts, early_stop, original_columns, row_stop=0, col_stop=0)[0]
+            return self.recursive_reorder(
+                df,
+                initial_value_counts,
+                early_stop,
+                original_columns,
+                row_stop=0,
+                col_stop=0,
+            )[0]
 
         mid_index = len(df) // 2
         df_top_half = df.iloc[:mid_index]
         df_bottom_half = df.iloc[mid_index:]
 
         with ThreadPoolExecutor() as executor:
-            future_top = executor.submit(self.recursive_split_and_reorder, df_top_half, original_columns, early_stop)
-            future_bottom = executor.submit(self.recursive_split_and_reorder, df_bottom_half, original_columns, early_stop)
+            future_top = executor.submit(
+                self.recursive_split_and_reorder,
+                df_top_half,
+                original_columns,
+                early_stop,
+            )
+            future_bottom = executor.submit(
+                self.recursive_split_and_reorder,
+                df_bottom_half,
+                original_columns,
+                early_stop,
+            )
 
         reordered_top_half = future_top.result()
         reordered_bottom_half = future_bottom.result()
 
         assert reordered_bottom_half.shape == df_bottom_half.shape
-        reordered_df = pd.concat([reordered_top_half, reordered_bottom_half], axis=0, ignore_index=True)
+        reordered_df = pd.concat(
+            [reordered_top_half, reordered_bottom_half], axis=0, ignore_index=True
+        )
 
         assert reordered_df.shape == df.shape
 
@@ -277,13 +350,22 @@ class Evolved(Algorithm):
         # Prepare
         initial_df = df.copy()
         if col_merge:
-            self.num_rows, self.column_stats = self.calculate_col_stats(df, enable_index=True)
+            self.num_rows, self.column_stats = self.calculate_col_stats(
+                df, enable_index=True
+            )
             reordered_columns = [col for col, _, _, _ in self.column_stats]
             for col_to_merge in col_merge:
-                final_col_order = [col for col in reordered_columns if col in col_to_merge]
+                final_col_order = [
+                    col for col in reordered_columns if col in col_to_merge
+                ]
                 df = self.merging_columns(df, final_col_order, prepended=False)
-        self.num_rows, self.column_stats = self.calculate_col_stats(df, enable_index=True)
-        self.column_stats = {col: (num_groups, avg_len, score) for col, num_groups, avg_len, score in self.column_stats}
+        self.num_rows, self.column_stats = self.calculate_col_stats(
+            df, enable_index=True
+        )
+        self.column_stats = {
+            col: (num_groups, avg_len, score)
+            for col, num_groups, avg_len, score in self.column_stats
+        }
 
         # One way dependency statistics [not used]
         if one_way_dep is not None and len(one_way_dep) > 0:
@@ -291,25 +373,41 @@ class Evolved(Algorithm):
             for dep in one_way_dep:
                 col1 = [col for col in df.columns if dep[0] in col]
                 col2 = [col for col in df.columns if dep[1] in col]
-                assert len(col1) == 1, f"Expected one column to match {dep[0]}, but got {len(col1)}"
-                assert len(col2) == 1, f"Expected one column to match {dep[1]}, but got {len(col2)}"
+                assert len(col1) == 1, (
+                    f"Expected one column to match {dep[0]}, but got {len(col1)}"
+                )
+                assert len(col2) == 1, (
+                    f"Expected one column to match {dep[1]}, but got {len(col2)}"
+                )
                 col1 = col1[0]
                 col2 = col2[0]
                 self.dep_graph.add_edge(col1, col2)
 
         # Discard too distinct columns by threshold [optional]
         nunique_threshold = len(df) * distinct_value_threshold
-        columns_to_discard = [col for col in df.columns if df[col].nunique() > nunique_threshold]
-        columns_to_discard = sorted(columns_to_discard, key=lambda x: self.column_stats[x][2], reverse=True)
-        columns_to_recurse = [col for col in df.columns if col not in columns_to_discard]
+        columns_to_discard = [
+            col for col in df.columns if df[col].nunique() > nunique_threshold
+        ]
+        columns_to_discard = sorted(
+            columns_to_discard, key=lambda x: self.column_stats[x][2], reverse=True
+        )
+        columns_to_recurse = [
+            col for col in df.columns if col not in columns_to_discard
+        ]
         df["original_index"] = range(len(df))
         discarded_columns_df = df[columns_to_discard + ["original_index"]]
         df_to_recurse = df[columns_to_recurse + ["original_index"]]
         recurse_df = df_to_recurse
 
-        self.column_stats = {col: stats for col, stats in self.column_stats.items() if col not in columns_to_discard}
+        self.column_stats = {
+            col: stats
+            for col, stats in self.column_stats.items()
+            if col not in columns_to_discard
+        }
         initial_value_counts = Counter(recurse_df.stack())
-        self.val_len = {val: self.calculate_length(val) for val in initial_value_counts.keys()}
+        self.val_len = {
+            val: self.calculate_length(val) for val in initial_value_counts.keys()
+        }
 
         self.row_stop = row_stop if row_stop else len(recurse_df)
         self.col_stop = col_stop if col_stop else len(recurse_df.columns.tolist())
@@ -325,7 +423,9 @@ class Evolved(Algorithm):
         # Recursive reordering
         self.num_cols = len(recurse_df.columns)
         if parallel:
-            reordered_df = self.recursive_split_and_reorder(recurse_df, original_columns=columns_to_recurse, early_stop=early_stop)
+            reordered_df = self.recursive_split_and_reorder(
+                recurse_df, original_columns=columns_to_recurse, early_stop=early_stop
+            )
         else:
             reordered_df, _ = self.recursive_reorder(
                 recurse_df,
@@ -333,33 +433,42 @@ class Evolved(Algorithm):
                 early_stop=early_stop,
             )
 
-        assert (
-            reordered_df.shape == recurse_df.shape
-        ), f"Reordered DataFrame shape {reordered_df.shape} does not match original DataFrame shape {recurse_df.shape}"
-        assert recurse_df["original_index"].is_unique, "Passed in recurse index contains duplicates!"
-        assert reordered_df["original_index"].is_unique, "Reordered index contains duplicates!"
+        assert reordered_df.shape == recurse_df.shape, (
+            f"Reordered DataFrame shape {reordered_df.shape} does not match original DataFrame shape {recurse_df.shape}"
+        )
+        assert recurse_df["original_index"].is_unique, (
+            "Passed in recurse index contains duplicates!"
+        )
+        assert reordered_df["original_index"].is_unique, (
+            "Reordered index contains duplicates!"
+        )
 
         if len(columns_to_discard) > 0:
-            final_df = pd.merge(reordered_df, discarded_columns_df, on="original_index", how="left")
+            final_df = pd.merge(
+                reordered_df, discarded_columns_df, on="original_index", how="left"
+            )
         else:
             final_df = reordered_df
 
         final_df = final_df.drop(columns=["original_index"])
 
         if not col_merge:
-            assert (
-                final_df.shape == initial_df.shape
-            ), f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {initial_df.shape}"
+            assert final_df.shape == initial_df.shape, (
+                f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {initial_df.shape}"
+            )
         else:
-            assert (
-                final_df.shape[0] == initial_df.shape[0]
-            ), f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {initial_df.shape}"
+            assert final_df.shape[0] == initial_df.shape[0], (
+                f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {initial_df.shape}"
+            )
             assert (
                 final_df.shape[1] == recurse_df.shape[1] + len(columns_to_discard) - 1
-            ), f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {recurse_df.shape}"
+            ), (
+                f"Final DataFrame shape {final_df.shape} does not match original DataFrame shape {recurse_df.shape}"
+            )
 
         # sort by the first column to get the final order
         final_df = final_df.sort_values(by=final_df.columns.to_list(), axis=0)
         return final_df, []
+
 
 # EVOLVE-BLOCK-END

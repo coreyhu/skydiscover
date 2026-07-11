@@ -23,7 +23,11 @@ class _ConsoleFormatter(logging.Formatter):
             else record.name
         )
         parts = name.split(".")
-        short = f"search.{parts[1]}" if parts[0] == "search" and len(parts) >= 3 else parts[-1]
+        short = (
+            f"search.{parts[1]}"
+            if parts[0] == "search" and len(parts) >= 3
+            else parts[-1]
+        )
         fmt = (
             f"{ts} {record.levelname} [{short}] "
             if record.levelno >= logging.WARNING
@@ -38,7 +42,10 @@ class _ConsoleFilter(logging.Filter):
     def filter(self, record):
         if record.levelno >= logging.WARNING:
             return True
-        if not record.name.startswith("skydiscover") or record.name.split(".")[-1] in _QUIET:
+        if (
+            not record.name.startswith("skydiscover")
+            or record.name.split(".")[-1] in _QUIET
+        ):
             return False
         return True
 
@@ -51,7 +58,9 @@ def setup_search_logging(log_level: str, log_dir: str, name: str) -> None:
 
     log_file = os.path.join(log_dir, f"{name}_{time.strftime('%Y%m%d_%H%M%S')}.log")
     fh = logging.FileHandler(log_file)
-    fh.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+    fh.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
     root.addHandler(fh)
 
     if not any(

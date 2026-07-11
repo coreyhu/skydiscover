@@ -22,7 +22,9 @@ class EvolvedProgramDatabase(ProgramDatabase):
         super().__init__(name, config)
         self.initial_program = None
 
-    def add(self, program: EvolvedProgram, iteration: Optional[int] = None, **kwargs) -> str:
+    def add(
+        self, program: EvolvedProgram, iteration: Optional[int] = None, **kwargs
+    ) -> str:
         """Add a program to the database."""
         if iteration == 0 or program.iteration_found == 0:
             self.initial_program = program

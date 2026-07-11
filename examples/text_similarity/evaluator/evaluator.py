@@ -37,11 +37,15 @@ def main():
         a, b, h = PAIRS[i]
         lines.append(f"  '{a}' vs '{b}': predicted={predicted[i]:.2f}, human={h:.2f}")
 
-    print(json.dumps({
-        "status": "success",
-        "combined_score": round(max(0.0, correlation), 4),
-        "artifacts": {"feedback": "\n".join(lines)},
-    }))
+    print(
+        json.dumps(
+            {
+                "status": "success",
+                "combined_score": round(max(0.0, correlation), 4),
+                "artifacts": {"feedback": "\n".join(lines)},
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

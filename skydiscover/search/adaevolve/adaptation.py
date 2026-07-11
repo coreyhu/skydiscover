@@ -105,9 +105,9 @@ class AdaptiveState:
 
             # Update accumulated signal with normalized squared delta
             # G_t = ρ * G_{t-1} + (1 - ρ) * δ²
-            self.accumulated_signal = self.decay * self.accumulated_signal + (1 - self.decay) * (
-                normalized_delta**2
-            )
+            self.accumulated_signal = self.decay * self.accumulated_signal + (
+                1 - self.decay
+            ) * (normalized_delta**2)
 
             return normalized_delta
 
@@ -140,9 +140,9 @@ class AdaptiveState:
 
         # Update accumulated_signal (triggers exploitation mode)
         # The island now has a good solution worth refining
-        self.accumulated_signal = self.decay * self.accumulated_signal + (1 - self.decay) * (
-            normalized_delta**2
-        )
+        self.accumulated_signal = self.decay * self.accumulated_signal + (
+            1 - self.decay
+        ) * (normalized_delta**2)
 
         # NOTE: We do NOT update improvement_count or total_evaluations
         # because the island didn't earn this improvement
@@ -254,11 +254,15 @@ class MultiDimensionalAdapter:
     """
 
     states: List[AdaptiveState] = field(default_factory=list)
-    dimension_visits: List[int] = field(default_factory=list)  # Raw counts for exploration
+    dimension_visits: List[int] = field(
+        default_factory=list
+    )  # Raw counts for exploration
     dimension_rewards: List[float] = field(
         default_factory=list
     )  # Decayed rewards (GLOBAL normalized)
-    decayed_visits: List[float] = field(default_factory=list)  # Decayed visits for reward_avg
+    decayed_visits: List[float] = field(
+        default_factory=list
+    )  # Decayed visits for reward_avg
 
     # Global tracking for UCB normalization
     global_best_score: float = float("-inf")  # Best across ALL dimensions
@@ -424,7 +428,9 @@ class MultiDimensionalAdapter:
         # Ensure minimum visits for all dimensions
         # Randomize order to avoid always returning dimension 0 when multiple
         # dimensions are underexplored (fixes biased exploration issue)
-        underexplored = [i for i in range(n_dims) if self.dimension_visits[i] < self.min_visits]
+        underexplored = [
+            i for i in range(n_dims) if self.dimension_visits[i] < self.min_visits
+        ]
         if underexplored:
             import random
 
@@ -441,14 +447,18 @@ class MultiDimensionalAdapter:
             # Recent reward average using DECAYED visits
             # This prevents reward_avg → 0 as raw visits grow
             # reward_avg = decayed_rewards / decayed_visits = recent reward per recent visit
-            reward_avg = self.dimension_rewards[i] / dec_visits if dec_visits > 0 else 0.0
+            reward_avg = (
+                self.dimension_rewards[i] / dec_visits if dec_visits > 0 else 0.0
+            )
 
             # Exploration bonus uses RAW visits
             # We still want classic UCB exploration: visit underexplored islands
             # GUARD: Prevent division by zero if raw_visits is somehow 0
             # (shouldn't happen after min_visits check, but defensive programming)
             if raw_visits <= 0:
-                exploration_bonus = float("inf")  # Force exploration of unvisited dimension
+                exploration_bonus = float(
+                    "inf"
+                )  # Force exploration of unvisited dimension
             else:
                 exploration_bonus = self.ucb_exploration * math.sqrt(
                     math.log(total_iterations + 1) / raw_visits
@@ -512,7 +522,9 @@ class MultiDimensionalAdapter:
                     "raw_visits": self.dimension_visits[i],
                     "decayed_visits": dec_visits,
                     "decayed_reward": self.dimension_rewards[i],
-                    "reward_avg": self.dimension_rewards[i] / dec_visits if dec_visits > 0 else 0.0,
+                    "reward_avg": self.dimension_rewards[i] / dec_visits
+                    if dec_visits > 0
+                    else 0.0,
                 }
             )
 
@@ -561,7 +573,9 @@ class MultiDimensionalAdapter:
         # compute from per-dimension best scores
         if adapter.global_best_score == float("-inf") and adapter.states:
             adapter.global_best_score = (
-                max(s.best_score for s in adapter.states if not math.isinf(s.best_score))
+                max(
+                    s.best_score for s in adapter.states if not math.isinf(s.best_score)
+                )
                 if any(not math.isinf(s.best_score) for s in adapter.states)
                 else float("-inf")
             )

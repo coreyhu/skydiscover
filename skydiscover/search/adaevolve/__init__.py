@@ -11,7 +11,10 @@ Core Concepts:
 - UCB with Decay: Island selection with decayed magnitude rewards
 """
 
-from skydiscover.search.adaevolve.adaptation import AdaptiveState, MultiDimensionalAdapter
+from skydiscover.search.adaevolve.adaptation import (
+    AdaptiveState,
+    MultiDimensionalAdapter,
+)
 from skydiscover.search.adaevolve.controller import AdaEvolveController
 from skydiscover.search.adaevolve.database import (
     EXPLOIT_LABEL,

@@ -219,7 +219,9 @@ async def run(
                             if pid not in seen_ids:
                                 seen_ids.add(pid)
                                 sky_prog = _to_skydiscover_program(p)
-                                monitor_callback(sky_prog, getattr(p, "iteration_found", 0))
+                                monitor_callback(
+                                    sky_prog, getattr(p, "iteration_found", 0)
+                                )
                     except Exception:
                         logger.debug("Monitor poll error", exc_info=True)
                 # Human feedback: inject feedback into OpenEvolve's config
@@ -233,7 +235,9 @@ async def run(
                                     new_prompt = feedback
                                 else:
                                     new_prompt = (
-                                        original_sys_prompt + "\n\n## Human Guidance\n" + feedback
+                                        original_sys_prompt
+                                        + "\n\n## Human Guidance\n"
+                                        + feedback
                                     )
                             else:
                                 new_prompt = original_sys_prompt

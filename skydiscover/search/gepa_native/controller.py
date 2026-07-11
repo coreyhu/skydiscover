@@ -60,7 +60,9 @@ class GEPANativeController(DiscoveryController):
         db_config = self.config.search.database
         self.acceptance_gating: bool = getattr(db_config, "acceptance_gating", True)
         self.use_merge: bool = getattr(db_config, "use_merge", True)
-        self.merge_after_stagnation: int = getattr(db_config, "merge_after_stagnation", 15)
+        self.merge_after_stagnation: int = getattr(
+            db_config, "merge_after_stagnation", 15
+        )
         self.max_recent_failures: int = getattr(db_config, "max_recent_failures", 5)
         self.max_merge_attempts: int = getattr(db_config, "max_merge_attempts", 10)
 
@@ -132,7 +134,11 @@ class GEPANativeController(DiscoveryController):
                     continue
 
                 # --- Acceptance gating (skip for from-scratch programs) ---
-                if self.acceptance_gating and result.child_program_dict and result.parent_id:
+                if (
+                    self.acceptance_gating
+                    and result.child_program_dict
+                    and result.parent_id
+                ):
                     accepted = self._acceptance_gate(result, iteration)
                     if not accepted:
                         if self._should_merge():
@@ -141,15 +147,22 @@ class GEPANativeController(DiscoveryController):
 
                 # --- Accept: process normally ---
                 if post_process_result:
-                    self._process_iteration_result(result, iteration, checkpoint_callback)
+                    self._process_iteration_result(
+                        result, iteration, checkpoint_callback
+                    )
 
                 # Schedule a proactive merge after successful acceptance
-                if self.use_merge and self._merge_attempts_used < self.max_merge_attempts:
+                if (
+                    self.use_merge
+                    and self._merge_attempts_used < self.max_merge_attempts
+                ):
                     self._merge_due = True
 
                 # Track improvement
                 if result.child_program_dict:
-                    child_score = get_score(result.child_program_dict.get("metrics", {}))
+                    child_score = get_score(
+                        result.child_program_dict.get("metrics", {})
+                    )
                     if child_score > self._best_score_seen:
                         self._best_score_seen = child_score
                         self._iterations_without_improvement = 0
@@ -203,7 +216,9 @@ class GEPANativeController(DiscoveryController):
             if isinstance(current_program, dict)
             else current_program
         )
-        db_stats = self._prompt_context.get("db_stats") or self.database.get_statistics()
+        db_stats = (
+            self._prompt_context.get("db_stats") or self.database.get_statistics()
+        )
 
         # Gather rejection history for reflective prompting
         rejected = self.database.get_rejection_history(limit=self.max_recent_failures)
@@ -231,7 +246,9 @@ class GEPANativeController(DiscoveryController):
         if failed_attempts:
             context["errors"] = failed_attempts
 
-        return self.context_builder.build_prompt(current_program=current_program, context=context)
+        return self.context_builder.build_prompt(
+            current_program=current_program, context=context
+        )
 
     # ------------------------------------------------------------------
     # Acceptance gating
@@ -298,7 +315,9 @@ class GEPANativeController(DiscoveryController):
 
         # Skip self-merge (happens when pool has < 2 distinct programs)
         if prog_a.id == prog_b.id:
-            logger.debug(f"Iteration {iteration}: Only one program available, skipping merge")
+            logger.debug(
+                f"Iteration {iteration}: Only one program available, skipping merge"
+            )
             return
 
         # Deduplication: skip if this pair was already tried
@@ -347,7 +366,9 @@ class GEPANativeController(DiscoveryController):
         child_id = str(uuid.uuid4())
         try:
             eval_start = time.time()
-            eval_result = await self.evaluator.evaluate_program(child_solution, child_id)
+            eval_result = await self.evaluator.evaluate_program(
+                child_solution, child_id
+            )
             eval_time = time.time() - eval_start
         except Exception as e:
             logger.warning(f"Merge evaluation failed: {e}")
@@ -410,7 +431,8 @@ class GEPANativeController(DiscoveryController):
                     )  # Never crash discovery due to monitor
         else:
             logger.info(
-                f"Merge REJECTED: score={merged_score:.4f} " f"< max({score_a:.4f}, {score_b:.4f})"
+                f"Merge REJECTED: score={merged_score:.4f} "
+                f"< max({score_a:.4f}, {score_b:.4f})"
             )
             # Stagnation counter NOT reset on rejected merge
 
@@ -454,7 +476,9 @@ class GEPANativeController(DiscoveryController):
             for key, value in prog.artifacts.items():
                 if not isinstance(value, str) or not value.strip():
                     continue
-                display = value if len(value) <= 500 else value[:500] + "... (truncated)"
+                display = (
+                    value if len(value) <= 500 else value[:500] + "... (truncated)"
+                )
                 diag_parts.append(f"- {key}: {display}")
             if diag_parts:
                 diagnostics_section += (

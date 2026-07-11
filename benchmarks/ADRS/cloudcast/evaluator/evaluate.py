@@ -73,7 +73,9 @@ def Min_Steiner_Tree(src, dsts, G, num_partitions, hop_limit=3000):
 
     def construct_stp():
         section_begin = '33D32945 STP File, STP Format Version 1.0\n\nSECTION Comment\nName "Relay: cloud regions"\nCreator "SkyDiscover"\n'
-        section_begin += f'Remark "Cloud region problem adapted from relay"\nEND\n\nSECTION Graph\n'
+        section_begin += (
+            f'Remark "Cloud region problem adapted from relay"\nEND\n\nSECTION Graph\n'
+        )
         section_begin += f"Nodes {num_nodes}\nEdges {num_edges}\nHopLimit {hop_limit}\n"
 
         Edge_info = []
@@ -90,7 +92,9 @@ def Min_Steiner_Tree(src, dsts, G, num_partitions, hop_limit=3000):
         v = [nodes.index(i) + 1 for i in dest_v]
         terminal_info = [f"T {i}\n" for i in v]
         terminal_info.append("END\n\nEOF")
-        section_terminal = f"""\nSECTION Terminals\nRoot {s}\nTerminals {len(dest_v)}\n"""
+        section_terminal = (
+            f"""\nSECTION Terminals\nRoot {s}\nTerminals {len(dest_v)}\n"""
+        )
 
         with open(param_loc, "w") as f:
             f.write(section_begin)
@@ -121,7 +125,7 @@ def Min_Steiner_Tree(src, dsts, G, num_partitions, hop_limit=3000):
     solution_graph = read_result(loc=write_loc)
 
     print(
-        f"Number of overlays added: {len(solution_graph.nodes) - (1 + len(dsts))}, {[node for node in solution_graph.nodes if node not in [src]+dsts]}"
+        f"Number of overlays added: {len(solution_graph.nodes) - (1 + len(dsts))}, {[node for node in solution_graph.nodes if node not in [src] + dsts]}"
     )
     bc_topology = BroadCastTopology(src, dsts, num_partitions)
 
@@ -187,7 +191,9 @@ if __name__ == "__main__":
         else:
             raise NotImplementedError(algo)
 
-        bc_t.set_num_partitions(config["num_partitions"])  # simple baseline, don't care about partitions, simply set it
+        bc_t.set_num_partitions(
+            config["num_partitions"]
+        )  # simple baseline, don't care about partitions, simply set it
 
         with open(outf, "w") as outfile:
             outfile.write(
@@ -217,7 +223,9 @@ if __name__ == "__main__":
     simulator = BCSimulator(int(args["num_vms"]), output_dir)
     for algo in algorithms:
         path = f"{input_dir}/{algo}.json"
-        simulator.evaluate_path(path, config)  # path of algorithm output, basic config to evaluate
+        simulator.evaluate_path(
+            path, config
+        )  # path of algorithm output, basic config to evaluate
 
     # nx.draw(mdgraph, with_labels=True)
     # plt.show()

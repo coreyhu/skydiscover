@@ -171,7 +171,9 @@ class OpenAILLM(LLMInterface):
                 return await asyncio.wait_for(self._call_api(params), timeout=timeout)
             except asyncio.TimeoutError:
                 if attempt < retries:
-                    logger.warning(f"Timeout attempt {attempt + 1}/{retries + 1}, retrying...")
+                    logger.warning(
+                        f"Timeout attempt {attempt + 1}/{retries + 1}, retrying..."
+                    )
                     attempt += 1
                     await asyncio.sleep(retry_delay)
                 else:
@@ -184,7 +186,9 @@ class OpenAILLM(LLMInterface):
                     )
                     continue
                 if attempt < retries:
-                    logger.warning(f"Error attempt {attempt + 1}/{retries + 1}: {e}, retrying...")
+                    logger.warning(
+                        f"Error attempt {attempt + 1}/{retries + 1}: {e}, retrying..."
+                    )
                     attempt += 1
                     await asyncio.sleep(retry_delay)
                 else:
@@ -237,7 +241,10 @@ class OpenAILLM(LLMInterface):
         except (openai.BadRequestError, openai.APIStatusError) as exc:
             # Some Azure deployments only expose the Responses API.
             # Fall back transparently when Chat Completions is unsupported.
-            if "unsupported" not in str(exc).lower() and "not found" not in str(exc).lower():
+            if (
+                "unsupported" not in str(exc).lower()
+                and "not found" not in str(exc).lower()
+            ):
                 raise
             logger.info("Chat Completions unsupported; falling back to Responses API")
             return await self._call_api_via_responses(params)
@@ -249,7 +256,9 @@ class OpenAILLM(LLMInterface):
         input_items = self._convert_to_responses_input(
             [m for m in messages if m.get("role") != "system"]
         )
-        system_msg = next((m["content"] for m in messages if m.get("role") == "system"), None)
+        system_msg = next(
+            (m["content"] for m in messages if m.get("role") == "system"), None
+        )
         resp_params: Dict[str, Any] = {
             "model": params.get("model", self.model),
             "input": input_items,
@@ -324,7 +333,9 @@ class OpenAILLM(LLMInterface):
 
         for attempt in range(retries + 1):
             try:
-                response = await asyncio.wait_for(self._call_responses_api(params), timeout=timeout)
+                response = await asyncio.wait_for(
+                    self._call_responses_api(params), timeout=timeout
+                )
                 text, image_b64, _ = extract_responses_output(response)
 
                 image_path = None
@@ -357,4 +368,6 @@ class OpenAILLM(LLMInterface):
 
     async def _call_responses_api(self, params: Dict[str, Any]):
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, lambda: self.client.responses.create(**params))
+        return await loop.run_in_executor(
+            None, lambda: self.client.responses.create(**params)
+        )

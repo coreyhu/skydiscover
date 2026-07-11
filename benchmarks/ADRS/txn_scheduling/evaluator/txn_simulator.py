@@ -7,6 +7,7 @@ class Workload:
     """
     Constructor for taking in transactions and representing them as (read/write, key, position, txn_len)
     """
+
     def __init__(self, workload_json, debug=False, verify=False):
         self.workload = list(json.loads(workload_json).values())
         self.num_txns = len(self.workload)
@@ -226,4 +227,3 @@ class Workload:
         # print(od.keys())
         # print(od.values())
         return total_cost
-

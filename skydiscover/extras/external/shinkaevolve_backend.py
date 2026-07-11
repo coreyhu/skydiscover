@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------
 
 
-def _map_config(config: Config, iterations: Optional[int], evaluator_path: str, output_dir: str):
+def _map_config(
+    config: Config, iterations: Optional[int], evaluator_path: str, output_dir: str
+):
     """Convert SkyDiscover Config to ShinkaEvolve's three config objects."""
     from dataclasses import fields as dc_fields
 
@@ -245,7 +247,9 @@ if __name__ == "__main__":
                                     sampler.task_sys_msg = feedback
                                 else:
                                     sampler.task_sys_msg = (
-                                        original_prompt + "\n\n## Human Guidance\n" + feedback
+                                        original_prompt
+                                        + "\n\n## Human Guidance\n"
+                                        + feedback
                                     )
                                 feedback_reader.set_current_prompt(sampler.task_sys_msg)
                                 logger.info(
@@ -270,7 +274,9 @@ if __name__ == "__main__":
                 if p.id not in seen_ids:
                     seen_ids.add(p.id)
                     try:
-                        monitor_callback(_to_skydiscover_program(p), getattr(p, "generation", 0))
+                        monitor_callback(
+                            _to_skydiscover_program(p), getattr(p, "generation", 0)
+                        )
                     except Exception:
                         logger.debug("Monitor flush error", exc_info=True)
         except Exception:
@@ -283,7 +289,9 @@ if __name__ == "__main__":
     # get_best_program() only returns "correct" programs. For continuous-score
     # problems (no pass/fail), fall back to the highest-scoring program overall.
     if best_sp is None and all_programs:
-        best_sp = max(all_programs, key=lambda p: float(getattr(p, "combined_score", 0) or 0))
+        best_sp = max(
+            all_programs, key=lambda p: float(getattr(p, "combined_score", 0) or 0)
+        )
 
     initial_score = _get_initial_score(all_programs)
 

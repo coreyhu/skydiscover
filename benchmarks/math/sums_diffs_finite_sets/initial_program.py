@@ -76,7 +76,7 @@ def run():
     best_set_np = None
 
     for i in range(hypers.num_restarts):
-        print(f"\n{'='*20} Restart {i+1}/{hypers.num_restarts} {'='*20}")
+        print(f"\n{'=' * 20} Restart {i + 1}/{hypers.num_restarts} {'=' * 20}")
         restart_key, main_key = jax.random.split(main_key)
         loss, u_set_np = run_single_trial(hypers, restart_key)
 
@@ -94,7 +94,9 @@ def run_single_trial(hypers, key):
     # Initialize a random sparse set, ensuring 0 is included
     key, subkey = jax.random.split(key)
     sparsity = 0.95
-    u_mask = jax.random.bernoulli(subkey, p=(1 - sparsity), shape=(hypers.max_integer + 1,))
+    u_mask = jax.random.bernoulli(
+        subkey, p=(1 - sparsity), shape=(hypers.max_integer + 1,)
+    )
     u_mask = u_mask.at[0].set(True)
 
     searcher = C6Searcher(hypers)

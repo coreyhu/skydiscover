@@ -28,7 +28,9 @@ def make_json_serializable(obj: Any) -> Any:
     if isinstance(obj, (list, tuple)):
         return [make_json_serializable(item) for item in obj]
     if isinstance(obj, (set, frozenset)):
-        return sorted([make_json_serializable(item) for item in obj], key=lambda x: str(x))
+        return sorted(
+            [make_json_serializable(item) for item in obj], key=lambda x: str(x)
+        )
     if hasattr(obj, "to_dict"):
         return make_json_serializable(obj.to_dict())
     return str(obj)
@@ -43,7 +45,9 @@ async def log_search_algorithm_generated(
 ) -> None:
     """Save newly generated search algorithm details to files (before scoring)."""
     if result.error:
-        logger.warning(f"Search strategy generation failed (iteration {iteration}): {result.error}")
+        logger.warning(
+            f"Search strategy generation failed (iteration {iteration}): {result.error}"
+        )
         return
 
     child_dict = result.child_program_dict or {}
@@ -238,13 +242,17 @@ async def log_failed_attempt(
         prompt_filename = f"failed_attempt_{attempt_number}_prompt.json"
         with open(os.path.join(iteration_dir, prompt_filename), "w") as f:
             json.dump(
-                {"system": prompt.get("system", ""), "user": prompt.get("user", "")}, f, indent=2
+                {"system": prompt.get("system", ""), "user": prompt.get("user", "")},
+                f,
+                indent=2,
             )
         attempt_data["prompt_file"] = prompt_filename
 
     failed_attempts.append(attempt_data)
     with open(failed_file, "w") as f:
-        json.dump({"iteration": iteration, "failed_attempts": failed_attempts}, f, indent=2)
+        json.dump(
+            {"iteration": iteration, "failed_attempts": failed_attempts}, f, indent=2
+        )
 
     if attempt_data["solution"]:
         code_file = os.path.join(iteration_dir, f"failed_attempt_{attempt_number}.py")
@@ -264,7 +272,9 @@ async def log_active_algorithm(
     os.makedirs(iteration_dir, exist_ok=True)
 
     candidate_code_path = os.path.join(iteration_dir, "code.py")
-    active_code_filename = "active_code.py" if os.path.exists(candidate_code_path) else "code.py"
+    active_code_filename = (
+        "active_code.py" if os.path.exists(candidate_code_path) else "code.py"
+    )
     with open(os.path.join(iteration_dir, active_code_filename), "w") as f:
         f.write(active_code)
 

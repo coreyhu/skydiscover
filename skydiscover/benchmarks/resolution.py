@@ -22,7 +22,9 @@ def resolve_benchmark_problem(benchmark_config: Any) -> BenchmarkResolution:
     """Load benchmark problem from external dataset using the configured resolver."""
     resolver_path = getattr(benchmark_config, "resolver", None)
     if not resolver_path:
-        raise ValueError("BenchmarkConfig.resolver must be set to use benchmark loading")
+        raise ValueError(
+            "BenchmarkConfig.resolver must be set to use benchmark loading"
+        )
 
     cwd = os.getcwd()
     if cwd not in sys.path:

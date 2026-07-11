@@ -26,7 +26,9 @@ def create_monitor_callback(
     def _callback(program: Any, iteration: int, result: Any = None) -> None:
         """Push a new program event to the monitor. Never raises."""
         try:
-            _push_program_event(server, database, program, iteration, result, start_time)
+            _push_program_event(
+                server, database, program, iteration, result, start_time
+            )
         except Exception:
             # Never crash discovery process due to monitor
             logger.debug("Monitor callback error", exc_info=True)
@@ -96,7 +98,9 @@ def _push_program_event(
     image_path = (getattr(program, "metadata", {}) or {}).get("image_path")
 
     total_programs = len(database.programs) if hasattr(database, "programs") else 0
-    best_prog = database.get_best_program() if hasattr(database, "get_best_program") else None
+    best_prog = (
+        database.get_best_program() if hasattr(database, "get_best_program") else None
+    )
     best_score = 0.0
     if best_prog and best_prog.metrics:
         best_score = best_prog.metrics.get("combined_score", 0.0)
@@ -201,14 +205,18 @@ def create_external_callback(
                 "island": None,
                 "is_best": is_best,
                 "generation": getattr(program, "generation", 0),
-                "image_path": (getattr(program, "metadata", {}) or {}).get("image_path"),
+                "image_path": (getattr(program, "metadata", {}) or {}).get(
+                    "image_path"
+                ),
             }
             stats = {
                 "total_programs": len(programs),
                 "current_iteration": iteration,
                 "best_score": best_score if best_score > -float("inf") else 0.0,
                 "iterations_since_improvement": 0,
-                "programs_per_min": round(len(programs) / elapsed * 60, 1) if elapsed > 0 else 0.0,
+                "programs_per_min": round(len(programs) / elapsed * 60, 1)
+                if elapsed > 0
+                else 0.0,
                 "elapsed_seconds": round(elapsed, 1),
             }
             event = {
@@ -218,7 +226,9 @@ def create_external_callback(
                 "is_best": is_best,
                 "full_solution": code[: server.max_solution_length],
                 "parent_full_solution": (
-                    parent_solution[: server.max_solution_length] if parent_solution else ""
+                    parent_solution[: server.max_solution_length]
+                    if parent_solution
+                    else ""
                 ),
             }
             server.push_event(event)

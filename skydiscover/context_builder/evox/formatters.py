@@ -13,7 +13,9 @@ from skydiscover.search.base_database import Program
 logger = logging.getLogger(__name__)
 
 
-def filter_db_stats_by_horizon(db_stats: Dict[str, Any], horizon: int) -> Dict[str, Any]:
+def filter_db_stats_by_horizon(
+    db_stats: Dict[str, Any], horizon: int
+) -> Dict[str, Any]:
     """Filter db_stats to only include the last 'horizon' entries for trajectory fields."""
     if not db_stats or horizon <= 0:
         return db_stats
@@ -31,7 +33,9 @@ def filter_db_stats_by_horizon(db_stats: Dict[str, Any], horizon: int) -> Dict[s
     return filtered
 
 
-def format_execution_trace(execution_trace: list, window_start_score: float = None) -> str:
+def format_execution_trace(
+    execution_trace: list, window_start_score: float = None
+) -> str:
     """Format execution trace with program/parent/context tuples."""
     if not execution_trace:
         return ""
@@ -76,8 +80,9 @@ def format_execution_trace(execution_trace: list, window_start_score: float = No
         context_str = f"Context=[{', '.join(fmt_program_ref(c) for c in ctx)}]"
 
         if prog_score is not None:
-            prog_score, parent_score = round(prog_score, 4), (
-                round(parent_score, 4) if parent_score is not None else None
+            prog_score, parent_score = (
+                round(prog_score, 4),
+                (round(parent_score, 4) if parent_score is not None else None),
             )
             if best is None:
                 best, outcome = prog_score, "first program"
@@ -104,7 +109,9 @@ def format_execution_trace(execution_trace: list, window_start_score: float = No
 
 
 def format_db_stats_diff(
-    start_stats: Dict[str, Any], end_stats: Dict[str, Any], horizon: Optional[int] = None
+    start_stats: Dict[str, Any],
+    end_stats: Dict[str, Any],
+    horizon: Optional[int] = None,
 ) -> str:
     """Format start -> end db_stats comparison for a search algorithm's window."""
     if not start_stats or not end_stats:
@@ -207,7 +214,9 @@ def format_db_stats_diff(
             lines.append(f"\n### Execution Trace (iterations {first_iter}-{last_iter})")
             window_start_score = start_summary.get("best") if start_summary else None
             lines.append(
-                format_execution_trace(execution_trace, window_start_score=window_start_score)
+                format_execution_trace(
+                    execution_trace, window_start_score=window_start_score
+                )
             )
         else:
 
@@ -262,7 +271,7 @@ def format_population_state(db_stats: Dict[str, Any]) -> str:
 
         if tiers := score_summary.get("score_tiers"):
             tier_parts = [
-                f"{n} ({d.get('threshold','')}): {d.get('pct_programs',0):.0f}%"
+                f"{n} ({d.get('threshold', '')}): {d.get('pct_programs', 0):.0f}%"
                 for n, d in tiers.items()
             ]
             lines.append(f"- programs_by_score_tier: {', '.join(tier_parts)}")
@@ -271,7 +280,9 @@ def format_population_state(db_stats: Dict[str, Any]) -> str:
             lines.append(f"- unique_score_values: {unique}")
 
     if (avg := db_stats.get("avg_solutions_per_parent")) is not None and pop_size:
-        lines.append(f"- {avg / pop_size * 100:.1f}% of solutions share the same parent on average")
+        lines.append(
+            f"- {avg / pop_size * 100:.1f}% of solutions share the same parent on average"
+        )
 
     if top_scores := db_stats.get("top_solution_scores"):
         best_score = top_scores[0]
@@ -309,11 +320,14 @@ def format_population_state(db_stats: Dict[str, Any]) -> str:
                 return "25-50th"
             return "0-25th"
 
-        for key, label in [("most_reused_parent", "parent"), ("most_reused_context", "context")]:
+        for key, label in [
+            ("most_reused_parent", "parent"),
+            ("most_reused_context", "context"),
+        ]:
             if (ratio := recent.get(f"{key}_ratio")) and ratio > 0:
                 bucket = score_bucket(recent.get(f"{key}_score"))
                 score_str = f", score {bucket}" if bucket else ""
-                lines.append(f"- {label}: {ratio*100:.0f}% reuse rate{score_str}")
+                lines.append(f"- {label}: {ratio * 100:.0f}% reuse rate{score_str}")
 
         if traj := recent.get("score_trajectory"):
             lines.append(f"- recent_scores (last {len(traj)}): {fmt_scores(traj)}")
@@ -403,10 +417,14 @@ def identify_search_improvement_areas(
                 f"Search algorithm score declined: {prev_score:.4f} → {current_score:.4f}. Consider revising."
             )
         else:
-            improvement_areas.append(f"Search algorithm score unchanged at {current_score:.4f}")
+            improvement_areas.append(
+                f"Search algorithm score unchanged at {current_score:.4f}"
+            )
 
     if not improvement_areas:
-        improvement_areas.append("Focus on improving the search algorithm score (combined_score)")
+        improvement_areas.append(
+            "Focus on improving the search algorithm score (combined_score)"
+        )
 
     if simplification_threshold:
         code_length = len(prog_attr(current_program, "solution"))
@@ -463,7 +481,9 @@ def format_problem_description(problem_config: Any) -> str:
         return problem_config
     if hasattr(problem_config, "system_message") and problem_config.system_message:
         return str(problem_config.system_message)
-    return str(problem_config) if problem_config else "(No problem description provided)"
+    return (
+        str(problem_config) if problem_config else "(No problem description provided)"
+    )
 
 
 def format_evaluator_context(evaluator_path: Any) -> str:
@@ -520,7 +540,9 @@ def prepare_search_algorithms_data(
             end_db_stats = filter_by_horizon(end_db_stats, horizon)
 
         if start_db_stats and end_db_stats:
-            db_stats_text = format_stats_diff(start_db_stats, end_db_stats, horizon=horizon)
+            db_stats_text = format_stats_diff(
+                start_db_stats, end_db_stats, horizon=horizon
+            )
             all_programs_data.append(
                 {
                     "program_num": idx,
@@ -585,17 +607,24 @@ def format_search_algorithms(
         for label, programs in other_context_programs.items():
             display_label = label or "Other Reference Programs"
             lines.extend(
-                [f"\n## {display_label}\n", "Diverse search programs that may inspire new ideas:\n"]
+                [
+                    f"\n## {display_label}\n",
+                    "Diverse search programs that may inspire new ideas:\n",
+                ]
             )
             for program in programs or []:
                 global_idx += 1
                 lines.extend(
-                    format_single_program_section(program, global_idx, language, summaries_by_num)
+                    format_single_program_section(
+                        program, global_idx, language, summaries_by_num
+                    )
                 )
     else:
         lines.append("## Other Reference Programs\n")
         for idx, program in enumerate(other_context_programs, start=1):
-            lines.extend(format_single_program_section(program, idx, language, summaries_by_num))
+            lines.extend(
+                format_single_program_section(program, idx, language, summaries_by_num)
+            )
 
     return "\n".join(lines)
 

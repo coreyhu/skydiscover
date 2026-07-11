@@ -81,7 +81,9 @@ def project_polygon(
     return min_proj, max_proj
 
 
-def overlap_1d(min1: float, max1: float, min2: float, max2: float, tol: float = 1e-6) -> bool:
+def overlap_1d(
+    min1: float, max1: float, min2: float, max2: float, tol: float = 1e-6
+) -> bool:
     """Determines whether two 1D intervals overlap, allowing for numerical tolerance."""
     return max1 >= min2 - tol and max2 >= min1 - tol
 
@@ -126,7 +128,9 @@ def is_inside_hexagon(
         p2 = hex_vertices[(i + 1) % len(hex_vertices)]
         edge_vector = (p2[0] - p1[0], p2[1] - p1[1])
         point_vector = (point[0] - p1[0], point[1] - p1[1])
-        cross_product = edge_vector[0] * point_vector[1] - edge_vector[1] * point_vector[0]
+        cross_product = (
+            edge_vector[0] * point_vector[1] - edge_vector[1] * point_vector[0]
+        )
         if cross_product < -tol:  # Allow small numerical errors
             return False
     return True
@@ -175,11 +179,15 @@ def verify_construction(
     # Disjointness check.
     for i in range(len(inner_hex_params_list)):
         for j in range(i + 1, len(inner_hex_params_list)):
-            if not hexagons_are_disjoint(inner_hex_params_list[i], inner_hex_params_list[j], tol):
-                raise AssertionError(f"Hexagons {i+1} and {j+1} intersect!")
+            if not hexagons_are_disjoint(
+                inner_hex_params_list[i], inner_hex_params_list[j], tol
+            ):
+                raise AssertionError(f"Hexagons {i + 1} and {j + 1} intersect!")
     # Containment check.
     if not all_hexagons_contained(inner_hex_params_list, outer_hex_params, tol):
-        raise AssertionError("Not all inner hexagons are contained in the outer hexagon!")
+        raise AssertionError(
+            "Not all inner hexagons are contained in the outer hexagon!"
+        )
     print("Construction is valid.")
 
 
@@ -193,7 +201,9 @@ def evaluate(program_path: str):
             sys.path.insert(0, program_dir)
             program = __import__(module_name)
             start_time = time.time()
-            inner_hex_data, outer_hex_data, outer_hex_side_length = program.hexagon_packing_12()
+            inner_hex_data, outer_hex_data, outer_hex_side_length = (
+                program.hexagon_packing_12()
+            )
             end_time = time.time()
             eval_time = end_time - start_time
         except Exception as err:
@@ -209,7 +219,7 @@ def evaluate(program_path: str):
 
         if inner_hex_data.shape != (N_HEX, 3):
             raise ValueError(
-                f"Invalid shapes: inner_hex_data = {inner_hex_data.shape}, expected {(N_HEX,3)}"
+                f"Invalid shapes: inner_hex_data = {inner_hex_data.shape}, expected {(N_HEX, 3)}"
             )
 
         if outer_hex_data.shape != (3,):
@@ -220,7 +230,10 @@ def evaluate(program_path: str):
         outer_hex_center = outer_hex_data[:2]
         outer_hex_angle_degrees = outer_hex_data[-1]
         verify_construction(
-            inner_hex_data, outer_hex_center, outer_hex_side_length, outer_hex_angle_degrees
+            inner_hex_data,
+            outer_hex_center,
+            outer_hex_side_length,
+            outer_hex_angle_degrees,
         )
 
         inv_outer_hex_side_length = float(1 / outer_hex_side_length)

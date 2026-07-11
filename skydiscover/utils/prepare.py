@@ -23,11 +23,15 @@ def prepare_program(
     temp_files: List[str],
 ) -> str:
     """Resolve initial_program to a file path, writing a temp file if needed."""
-    if isinstance(initial_program, (str, Path)) and os.path.exists(str(initial_program)):
+    if isinstance(initial_program, (str, Path)) and os.path.exists(
+        str(initial_program)
+    ):
         return str(initial_program)
 
     solution = (
-        "\n".join(initial_program) if isinstance(initial_program, list) else str(initial_program)
+        "\n".join(initial_program)
+        if isinstance(initial_program, list)
+        else str(initial_program)
     )
 
     if "EVOLVE-BLOCK-START" not in solution:
@@ -73,7 +77,9 @@ def prepare_evaluator(
     else:
         evaluator_code = str(evaluator)
         if "def evaluate" not in evaluator_code:
-            raise ValueError("Evaluator code must contain a 'def evaluate(program_path)' function")
+            raise ValueError(
+                "Evaluator code must contain a 'def evaluate(program_path)' function"
+            )
 
     if temp_dir is None:
         temp_dir = tempfile.gettempdir()

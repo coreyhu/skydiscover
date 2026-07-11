@@ -110,7 +110,9 @@ def load_database_from_file(
             f"Expected {database_class_name} and {program_class_name} in {file_path}"
         )
 
-    if not issubclass(database_class, ProgramDatabase) or not issubclass(program_class, Program):
+    if not issubclass(database_class, ProgramDatabase) or not issubclass(
+        program_class, Program
+    ):
         raise TypeError(
             f"{database_class_name} must extend ProgramDatabase, {program_class_name} must extend Program"
         )
@@ -143,7 +145,10 @@ def build_image_content(text_prompt: str, parent: Program, other_context: dict) 
                 b64 = base64.b64encode(f.read()).decode()
             ext = os.path.splitext(path)[1].lstrip(".").lower()
             mime = _MIME.get(ext, "image/png")
-            return {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}}
+            return {
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime};base64,{b64}"},
+            }
         except Exception:
             return None
 
@@ -154,7 +159,9 @@ def build_image_content(text_prompt: str, parent: Program, other_context: dict) 
     img_part = _encode_image(parent_img)
     if img_part:
         score = (parent.metrics or {}).get("combined_score", "?")
-        content.append({"type": "text", "text": f"Current best image (score: {score}):"})
+        content.append(
+            {"type": "text", "text": f"Current best image (score: {score}):"}
+        )
         content.append(img_part)
 
     # Other context images (limit to 3 to keep token cost reasonable)
@@ -167,7 +174,9 @@ def build_image_content(text_prompt: str, parent: Program, other_context: dict) 
             img_part = _encode_image(prog_img)
             if img_part:
                 score = (prog.metrics or {}).get("combined_score", "?")
-                content.append({"type": "text", "text": f"Other context images (score: {score}):"})
+                content.append(
+                    {"type": "text", "text": f"Other context images (score: {score}):"}
+                )
                 content.append(img_part)
                 img_count += 1
 
