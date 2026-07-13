@@ -40,7 +40,6 @@ class TestTaskTomlTimeout:
         inst._apply_task_toml_timeout(config)
         assert config.timeout == 360
 
-
     def test_missing_key_keeps_default(self, tmp_path):
         (tmp_path / "task.toml").write_text("[metadata]\nname = 'test'\n")
         inst = _make_evaluator(str(tmp_path))
@@ -74,6 +73,7 @@ class TestDockerRunArgs:
 
     def test_omits_gpus_without_task_toml(self, tmp_path):
         assert _make_evaluator(str(tmp_path))._docker_run_args() == []
+
 
 # ------------------------------------------------------------------
 # Solution path extraction: solve.sh (tier 1)
