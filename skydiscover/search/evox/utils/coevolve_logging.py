@@ -51,6 +51,7 @@ async def log_search_algorithm_generated(
         return
 
     child_dict = result.child_program_dict or {}
+    prompt = result.prompt or {}
 
     await save_search_algorithm(
         outputs_dir=outputs_dir,
@@ -59,6 +60,9 @@ async def log_search_algorithm_generated(
         solution=child_dict.get("solution", ""),
         score=None,
         metrics={},
+        system_prompt=prompt.get("system", ""),
+        user_prompt=prompt.get("user", ""),
+        llm_response=result.llm_response or "",
         diverge_label=diverge_label,
         refine_label=refine_label,
         pending_score=True,

@@ -40,6 +40,7 @@ class TestTaskTomlTimeout:
         inst._apply_task_toml_timeout(config)
         assert config.timeout == 360
 
+
     def test_missing_key_keeps_default(self, tmp_path):
         (tmp_path / "task.toml").write_text("[metadata]\nname = 'test'\n")
         inst = _make_evaluator(str(tmp_path))
@@ -61,6 +62,18 @@ class TestTaskTomlTimeout:
         inst._apply_task_toml_timeout(config)
         assert config.timeout == 360
 
+
+class TestDockerRunArgs:
+    def test_requests_all_gpus_for_gpu_task(self, tmp_path):
+        (tmp_path / "task.toml").write_text("[environment]\ngpus = 1\n")
+        assert _make_evaluator(str(tmp_path))._docker_run_args() == ["--gpus", "all"]
+
+    def test_omits_gpus_for_cpu_task(self, tmp_path):
+        (tmp_path / "task.toml").write_text("[environment]\ngpus = 0\n")
+        assert _make_evaluator(str(tmp_path))._docker_run_args() == []
+
+    def test_omits_gpus_without_task_toml(self, tmp_path):
+        assert _make_evaluator(str(tmp_path))._docker_run_args() == []
 
 # ------------------------------------------------------------------
 # Solution path extraction: solve.sh (tier 1)

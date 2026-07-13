@@ -320,6 +320,7 @@ class ContainerizedEvaluator:
         """Start a persistent container and return its ID."""
         # Build docker run command with environment variables
         cmd = ["docker", "run", "-d", "--rm"]
+        cmd.extend(self._docker_run_args())
         for key, value in self.env_vars.items():
             cmd.extend(["-e", f"{key}={value}"])
         cmd.extend(["--entrypoint", "sleep", self.image_tag, "infinity"])
@@ -331,6 +332,10 @@ class ContainerizedEvaluator:
             check=True,
         )
         return result.stdout.strip()
+
+    def _docker_run_args(self) -> List[str]:
+        """Extra arguments inserted before the image in ``docker run``."""
+        return []
 
     def _build_image(self) -> str:
         norm = os.path.normpath(self.benchmark_dir)

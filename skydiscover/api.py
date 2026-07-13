@@ -69,6 +69,7 @@ def run_discovery(
     system_prompt: Optional[str] = None,
     api_base: Optional[str] = None,
     cleanup: bool = True,
+    evaluator_env_vars: Optional[Dict[str, str]] = None,
 ) -> DiscoveryResult:
     """Run a discovery process and return the best result.
 
@@ -85,6 +86,8 @@ def run_discovery(
         system_prompt: Domain-specific context for the LLM.
         api_base: Base URL for an OpenAI-compatible API.
         cleanup: Remove temp files after the run.
+        evaluator_env_vars: Environment variables passed to evaluator subprocesses
+            and persistent containers.
 
     Returns:
         DiscoveryResult with best program, score, solution, metrics, and output directory.
@@ -102,6 +105,7 @@ def run_discovery(
             search=search,
             system_prompt=system_prompt,
             api_base=api_base,
+            evaluator_env_vars=evaluator_env_vars,
         )
     )
 
@@ -119,12 +123,13 @@ async def _run_discovery_async(
     system_prompt: Optional[str] = None,
     api_base: Optional[str] = None,
     cleanup: bool = True,
+    evaluator_env_vars: Optional[Dict[str, str]] = None,
 ) -> DiscoveryResult:
     """Async implementation of run_discovery."""
 
     temp_dir: Optional[str] = None
     temp_files: List[str] = []
-    evaluator_env_vars: Dict[str, str] = {}
+    resolved_evaluator_env_vars = dict(evaluator_env_vars or {})
 
     try:
         if isinstance(config, Config):
@@ -151,7 +156,10 @@ async def _run_discovery_async(
                 resolution = resolve_benchmark_problem(config_obj.benchmark)
                 initial_program = resolution.initial_program_path
                 evaluator = resolution.evaluator_path
-                evaluator_env_vars = resolution.evaluator_env_vars
+                resolved_evaluator_env_vars = {
+                    **resolution.evaluator_env_vars,
+                    **resolved_evaluator_env_vars,
+                }
                 logger.info(
                     f"[Benchmark Loader] Benchmark: {config_obj.benchmark.name}, Initial program: {initial_program}, Evaluator: {evaluator}"
                 )
@@ -203,8 +211,8 @@ async def _run_discovery_async(
             )
 
             if is_external(search_type):
-                if evaluator_env_vars:
-                    env_var_names = ", ".join(sorted(evaluator_env_vars))
+                if resolved_evaluator_env_vars:
+                    env_var_names = ", ".join(sorted(resolved_evaluator_env_vars))
                     raise ValueError(
                         "Passing evaluator environment variables to external backends is not yet supported. "
                         f"External backend '{search_type}' cannot be used with evaluator env vars: "
@@ -261,7 +269,7 @@ async def _run_discovery_async(
             evaluation_file=evaluator_path,
             config=config_obj,
             output_dir=actual_output_dir,
-            evaluator_env_vars=evaluator_env_vars,
+            evaluator_env_vars=resolved_evaluator_env_vars,
         )
 
         best_program = await controller.run(iterations=iterations)

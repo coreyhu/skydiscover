@@ -60,6 +60,22 @@ class HarborEvaluator(ContainerizedEvaluator):
     # Override: image building
     # ------------------------------------------------------------------
 
+    def _docker_run_args(self):
+        """Expose GPUs when requested by the Harbor task."""
+        return ["--gpus", "all"] if self._task_requests_gpu() else []
+
+    def _task_requests_gpu(self) -> bool:
+        toml_path = os.path.join(self.task_dir, "task.toml")
+        if not os.path.exists(toml_path):
+            return False
+        try:
+            with open(toml_path) as f:
+                text = f.read()
+        except Exception:
+            return False
+        match = re.search(r"^\s*gpus\s*=\s*(\d+)\s*$", text, re.MULTILINE)
+        return bool(match and int(match.group(1)) > 0)
+
     def _build_image(self) -> str:
         """Build from environment/Dockerfile."""
         name = os.path.basename(os.path.normpath(self.task_dir))
